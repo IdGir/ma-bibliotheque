@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur EPS Cycle 3 — Séances, Évaluations & Intégration Cahier Journal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS STRICT POUR L'IMPRESSION PDF SANS COUPURE */
+        @media print {
+            .no-print { display: none !important; }
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            body { background: white !important; color: black !important; font-size: 9pt; }
+            .card-print, .section-block {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                border: 1px solid #94a3b8 !important;
+                box-shadow: none !important;
+                margin-bottom: 0.5rem !important;
+            }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+            thead { display: table-header-group !important; }
+            input[type="text"], select {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+            }
+            #output { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; }
+        }
+        details > summary { cursor: pointer; list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- En-tête -->
+        <header class="bg-blue-800 text-white p-6 rounded-t-xl shadow-lg no-print">
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center gap-3">
+                        <span>🏃‍♂️</span> Générateur EPS Cycle 3
+                    </h1>
+                    <p class="text-blue-100 mt-1 text-sm">Séances &amp; évaluations, liste de classe réelle, exports et passerelle Cahier Journal.</p>
+                </div>
+                <div class="text-right text-xs">
+                    <div id="saveBadge" class="bg-blue-900/60 rounded px-3 py-1 inline-block">Brouillon : —</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SÉLECTEUR DE MODE (SÉANCE VS ÉVALUATION) -->
+        <div class="bg-blue-900 text-white p-3 flex flex-wrap justify-center gap-3 no-print shadow-md">
+            <button type="button" id="tabSeance" onclick="switchMode('seance')" class="px-6 py-2 rounded-lg font-bold text-sm bg-blue-600 shadow">
+                📝 Mode Fiche de Séance
+            </button>
+            <button type="button" id="tabEval" onclick="switchMode('eval')" class="px-6 py-2 rounded-lg font-bold text-sm bg-blue-950 text-blue-200 hover:bg-blue-800">
+                📊 Mode Grille d'Évaluation
+            </button>
+        </div>
+
+        <!-- BARRE D'OUTILS TRANSVERSALE -->
+        <div class="bg-slate-800 text-white px-3 py-2 flex flex-wrap gap-2 items-center no-print text-xs">
+            <button type="button" onclick="togglePanel('panelClasse')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded font-semibold">👥 Ma classe (<span id="classeCount">0</span>)</button>
+            <button type="button" onclick="togglePanel('panelIntegration')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded font-semibold">🔗 Cahier Journal</button>
+            <button type="button" onclick="togglePanel('panelHistorique')" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded font-semibold">📚 Historique (<span id="histoCount">0</span>)</button>
+            <span class="flex-1"></span>
+            <button type="button" onclick="exportGrilleCSV()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded font-semibold">⬇️ CSV notes</button>
+            <button type="button" onclick="exportDocumentJSON()" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded font-semibold">⬇️ JSON document</button>
+            <button type="button" onclick="resetBrouillon()" class="bg-red-800 hover:bg-red-700 px-3 py-1.5 rounded font-semibold">🗑️ Réinitialiser</button>
+        </div>
+
+        <!-- PANNEAU : MA CLASSE -->
+        <div id="panelClasse" class="hidden bg-white border-x border-b border-gray-200 p-5 no-print">
+            <h2 class="font-bold text-slate-800 mb-1 flex items-center gap-2">👥 Liste de classe</h2>
+            <p class="text-xs text-gray-600 mb-3">Remplace les « Élève 1 … 25 » génériques. Les niveaux saisis sont conservés par élève, même en changeant de séance.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Nom de la classe</label>
+                    <input type="text" id="classeNom" onchange="saveClasse()" class="w-full border p-2 rounded text-sm" placeholder="ex: CM1-A">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Importer un CSV (Nom;Prénom;Classe)</label>
+                    <input type="file" id="csvFile" accept=".csv,.txt" onchange="importClasseCSV(event)" class="w-full border p-1.5 rounded text-xs bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Depuis le Cahier Journal</label>
+                    <button type="button" onclick="pullElevesCahierJournal()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded text-xs">🔄 Récupérer les élèves</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-3">
+                <input type="text" id="newElevePrenom" class="border p-2 rounded text-sm flex-1" placeholder="Prénom">
+                <input type="text" id="newEleveNom" class="border p-2 rounded text-sm flex-1" placeholder="Nom (facultatif — RGPD)">
+                <input type="text" id="newEleveNiveau" class="border p-2 rounded text-sm w-28" placeholder="CM1">
+                <button type="button" onclick="ajouterEleve()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 rounded text-sm font-semibold">+ Ajouter</button>
+            </div>
+
+            <div id="classeListe" class="max-h-64 overflow-y-auto border rounded divide-y text-sm"></div>
+            <p class="text-[11px] text-gray-500 mt-2">💡 Minimisation RGPD : le prénom seul suffit (même règle que le Cahier Journal).</p>
+        </div>
+
+        <!-- PANNEAU : INTÉGRATION CAHIER JOURNAL -->
+        <div id="panelIntegration" class="hidden bg-white border-x border-b border-gray-200 p-5 no-print">
+            <h2 class="font-bold text-slate-800 mb-1">🔗 Passerelle Cahier Journal</h2>
+            <p class="text-xs text-gray-600 mb-3">
+                Deux transports, conformément à <code class="bg-gray-100 px-1">INTEGRATIONS.md</code> :
+                <strong>API</strong> (POST direct si le backend tourne) ou <strong>fichier</strong> (dépôt JSON dans <code class="bg-gray-100 px-1">inbox/cahier-journal/</code>).
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">URL du backend</label>
+                    <input type="text" id="cjBaseUrl" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="http://localhost:4000">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Code appli (registre)</label>
+                    <input type="text" id="cjAppCode" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="eps">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Clé API (X-Api-Key, si définie)</label>
+                    <input type="password" id="cjApiKey" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="facultatif">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">ID évaluation cible</label>
+                    <input type="text" id="cjEvaluationId" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="ex: 12">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">objectifId — Motricité</label>
+                    <input type="text" id="cjObjMoteur" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="ex: 34">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">objectifId — Tactique</label>
+                    <input type="text" id="cjObjTactique" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="ex: 35">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">objectifId — Rôles sociaux</label>
+                    <input type="text" id="cjObjSocial" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" placeholder="ex: 36">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Date de la séance</label>
+                    <input type="date" id="cjSeanceDate" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Heure de début</label>
+                    <input type="time" id="cjSeanceHeure" onchange="saveIntegration()" class="w-full border p-2 rounded text-sm" value="14:00">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Durée (min) / Lieu</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="cjSeanceDuree" onchange="saveIntegration()" class="w-24 border p-2 rounded text-sm" value="60" min="15" step="5">
+                        <input type="text" id="cjSeanceLieu" onchange="saveIntegration()" class="flex-1 border p-2 rounded text-sm" placeholder="Gymnase">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="chargerEvaluationsCJ()" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded text-xs font-semibold">📋 Lister évaluations &amp; objectifs</button>
+                <button type="button" onclick="envoyerSeanceAPI()" class="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded text-xs font-semibold">📝 Envoyer la séance (API)</button>
+                <button type="button" onclick="envoyerResultatsAPI()" class="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded text-xs font-semibold">📤 Envoyer les résultats (API)</button>
+                <button type="button" onclick="telechargerEvenementFichier('seance')" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded text-xs font-semibold">💾 Fichier inbox — séance</button>
+                <button type="button" onclick="telechargerEvenementFichier('resultats')" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded text-xs font-semibold">💾 Fichier inbox — résultats</button>
+            </div>
+            <div id="cjStatus" class="text-xs mt-3"></div>
+            <p class="text-[11px] text-gray-500 mt-2">
+                ⚠️ Le backend n'autorise que les origines <code>localhost</code> / réseau privé. Ouvert en <code>file://</code>, le mode API sera bloqué (CORS) :
+                lancez <code class="bg-gray-100 px-1">demarrer-EPS.bat</code> pour servir cette page sur <code>http://localhost:8090</code>, ou utilisez le mode fichier.
+            </p>
+        </div>
+
+        <!-- PANNEAU : HISTORIQUE -->
+        <div id="panelHistorique" class="hidden bg-white border-x border-b border-gray-200 p-5 no-print">
+            <h2 class="font-bold text-slate-800 mb-1">📚 Historique des documents générés</h2>
+            <p class="text-xs text-gray-600 mb-3">Chaque génération est archivée localement. Rechargez une séance passée en un clic.</p>
+            <div id="historiqueListe" class="max-h-72 overflow-y-auto border rounded divide-y text-sm"></div>
+        </div>
+
+        <!-- Formulaire principal -->
+        <div class="bg-white p-6 shadow-md rounded-b-xl mb-8 no-print border-x border-b border-gray-200">
+
+            <!-- BLOC ASSISTANT API / IA MULTI-FOURNISSEURS -->
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 p-5 rounded-xl mb-6">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl" id="aiIcon">🚀</span>
+                    <h2 class="text-lg font-bold text-indigo-900" id="aiTitle">Générer une Séance par IA</h2>
+                </div>
+                <p class="text-xs text-indigo-700 mb-4" id="aiDesc">Fournisseur et modèle partagés avec les autres applis pédagogiques (clé mémorisée localement).</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1">Fournisseur d'API</label>
+                        <select id="apiProvider" onchange="toggleApiKeyInput(); saveIaConfig();" class="w-full border p-2 rounded text-sm bg-white font-medium">
+                            <option value="demo">Mode Démo (Gratuit / Sans Clé)</option>
+                            <option value="gemini" selected>Google AI Studio (Gemini Direct)</option>
+                            <option value="openrouter">OpenRouter (Multi-modèles / 1M Free)</option>
+                            <option value="openai">OpenAI (GPT-4o-mini)</option>
+                            <option value="mistral">Mistral AI</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="ollama">Ollama (local, hors-ligne)</option>
+                        </select>
+                    </div>
+
+                    <div id="apiKeyContainer">
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1"><span id="keyHint">Clé Google AI Studio (AIzaSy...)</span></label>
+                        <input type="password" id="apiKey" onchange="saveIaConfig()" class="w-full border p-2 rounded text-sm bg-white" placeholder="AIzaSy...">
+                    </div>
+
+                    <!-- Modèles Google Gemini -->
+                    <div id="geminiModelContainer">
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1">Modèle Gemini</label>
+                        <select id="geminiModel" onchange="saveIaConfig()" class="w-full border p-2 rounded text-sm bg-white font-medium">
+                            <option value="gemini-3.5-flash" selected>Gemini 3.5 Flash (Recommandé)</option>
+                            <option value="gemini-3.6-flash">Gemini 3.6 Flash (Dernier modèle)</option>
+                            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (Rapide / économique)</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Avancé)</option>
+                        </select>
+                    </div>
+
+                    <!-- Modèles OpenRouter avec 1M Tokens & Gratuit -->
+                    <div id="openrouterModelContainer" class="hidden">
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1">Modèle OpenRouter</label>
+                        <select id="openrouterModel" onchange="toggleCustomModelInput(); saveIaConfig();" class="w-full border p-2 rounded text-sm bg-white font-medium">
+                            <option value="google/gemini-2.0-flash-lite-001:free">Gemini 2.0 Flash Lite (Gratuit - 1M Tokens)</option>
+                            <option value="google/gemini-flash-1.5:free">Gemini 1.5 Flash (Gratuit - 1M Tokens)</option>
+                            <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Gratuit - Raisonnement)</option>
+                            <option value="deepseek/deepseek-chat">DeepSeek V3 (Rapide &amp; Economique)</option>
+                            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Gratuit)</option>
+                            <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder (Gratuit)</option>
+                            <option value="mistralai/mistral-small-24b-instruct-2501:free">Mistral Small 24B (Gratuit)</option>
+                            <option value="openrouter/auto">Auto (Routage automatique)</option>
+                            <option value="custom">Saisir un autre modèle ID...</option>
+                        </select>
+                    </div>
+
+                    <!-- Champ personnalisé (OpenRouter / Ollama / autre) -->
+                    <div id="customModelContainer" class="hidden">
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1"><span id="customModelHint">ID Modèle Personnalisé</span></label>
+                        <input type="text" id="customOpenrouterModel" onchange="saveIaConfig()" class="w-full border p-2 rounded text-sm bg-white" placeholder="ex: anthropic/claude-3.5-sonnet">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-900 mb-1">Préréglages d'exemples</label>
+                        <select id="presetSelect" onchange="applyPresetPrompt()" class="w-full border p-2 rounded text-sm bg-white">
+                            <option value="">-- Sujets tests --</option>
+                            <option value="Natation CM1 : savoir nager tête hors de l'eau sur 10 mètres">Natation CM1 : 10m aquatique</option>
+                            <option value="Basket CM2 : Demarquage et passe">Basket CM2 : Attaque &amp; Démarquage</option>
+                            <option value="Course d'orientation CM1 : Recherche de balises">Orientation CM1 : Cartes &amp; Balises</option>
+                            <option value="Acrosport CM2 : réaliser un enchaînement de 3 figures à 3">Acrosport CM2 : Figures &amp; Enchaînement</option>
+                            <option value="Athlétisme CM2 : course de vitesse 40m et relais">Athlétisme CM2 : Vitesse &amp; Relais</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="aiPrompt" class="flex-1 border p-2 rounded text-sm focus:ring-2 focus:ring-indigo-500" placeholder="ex: Natation Cycle 3 : savoir nager tête hors de l'eau sur 10 mètres">
+                    <button type="button" onclick="fetchAndFillFromAPI()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded text-sm flex items-center gap-2">
+                        <span id="btnSpinner" class="hidden animate-spin">🔄</span>
+                        <span id="btnAiText">🚀 Générer Séance + Schéma</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- FORMULAIRE DE MODIFICATION ET VALIDATION -->
+            <form id="epsForm" class="space-y-6">
+                <!-- En-tête commune -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block font-semibold mb-1" id="labelTitre">Titre de la séance</label>
+                        <input type="text" id="titre" class="w-full border p-2 rounded" placeholder="ex: Se déplacer sur 10 mètres" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Niveau</label>
+                        <select id="niveau" class="w-full border p-2 rounded">
+                            <option value="CM1">CM1</option>
+                            <option value="CM2" selected>CM2</option>
+                            <option value="6ème">6ème</option>
+                            <option value="Cycle 3 (CM1/CM2/6ème)">Cycle 3</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Activité (APSA)</label>
+                        <input type="text" id="apsa" class="w-full border p-2 rounded" placeholder="ex: Natation" required>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Période / Trimestre</label>
+                        <input type="text" id="seanceInfo" class="w-full border p-2 rounded" placeholder="ex: Séance 3/6 ou T2">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-1 text-blue-700">Champ d'Apprentissage (CA)</label>
+                    <select id="caSelect" onchange="updateSpecificCompetencies()" class="w-full border p-2 rounded bg-blue-50 font-medium">
+                        <option value="CA1">CA 1 : Performance maximale mesurable</option>
+                        <option value="CA2">CA 2 : Déplacement en environnement varié</option>
+                        <option value="CA3">CA 3 : Prestation artistique ou acrobatique</option>
+                        <option value="CA4" selected>CA 4 : Affrontement collectif ou individuel</option>
+                    </select>
+                </div>
+
+                <!-- CONTENEUR DES COMPÉTENCES SPÉCIFIQUES -->
+                <div>
+                    <label class="block font-semibold mb-2 text-blue-700">Attendus de fin de cycle / Compétences visées</label>
+                    <div id="specificCompetencies" class="grid grid-cols-1 gap-2 text-sm bg-blue-50 p-3 rounded border border-blue-200"></div>
+                </div>
+
+                <!-- SECTION SÉANCE -->
+                <div id="sectionSeanceForm" class="space-y-4">
+                    <h3 class="text-lg font-bold border-b pb-1 text-gray-700">Contenu de la séance</h3>
+                    <div>
+                        <label class="block font-semibold mb-1">1. Échauffement (10 min)</label>
+                        <textarea id="echauffement" rows="2" class="w-full border p-2 rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">2. Situation Principale</label>
+                        <textarea id="situationMain" rows="3" class="w-full border p-2 rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1 text-purple-800">3. Schéma SVG explicatif</label>
+                        <textarea id="schemaSvgCode" rows="2" class="w-full border p-2 rounded font-mono text-xs bg-gray-50"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">4. Adaptations / Différenciation</label>
+                        <textarea id="differenciation" rows="2" class="w-full border p-2 rounded"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">5. Matériel &amp; Sécurité</label>
+                        <textarea id="materiel" rows="2" class="w-full border p-2 rounded" placeholder="Matériel nécessaire, points de vigilance sécurité"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">6. Bilan &amp; Critères de réussite</label>
+                        <textarea id="bilan" rows="2" class="w-full border p-2 rounded"></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION ÉVALUATION -->
+                <div id="sectionEvalForm" class="space-y-4 hidden">
+                    <h3 class="text-lg font-bold border-b pb-1 text-purple-900">Critères &amp; Niveaux de Maîtrise (Socle EPS)</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-semibold text-xs mb-1">Critère 1 : Motricité / Technique</label>
+                            <textarea id="critereMoteur" rows="2" class="w-full border p-2 rounded text-xs"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-xs mb-1">Critère 2 : Choix Tactiques</label>
+                            <textarea id="critereTactique" rows="2" class="w-full border p-2 rounded text-xs"></textarea>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-xs mb-1">Critère 3 : Rôles Sociaux &amp; Sécurité</label>
+                            <textarea id="critereSocial" rows="2" class="w-full border p-2 rounded text-xs"></textarea>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-sm text-gray-700 border-b pt-2">Descripteurs des 4 degrés d'acquisition</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        <div class="p-2 bg-red-50 border border-red-200 rounded">
+                            <span class="font-bold text-red-800">Niveau 1 : Maîtrise Insuffisante</span>
+                            <textarea id="niv1" rows="2" class="w-full border p-1 rounded mt-1"></textarea>
+                        </div>
+                        <div class="p-2 bg-orange-50 border border-orange-200 rounded">
+                            <span class="font-bold text-orange-800">Niveau 2 : Maîtrise Fragile</span>
+                            <textarea id="niv2" rows="2" class="w-full border p-1 rounded mt-1"></textarea>
+                        </div>
+                        <div class="p-2 bg-green-50 border border-green-200 rounded">
+                            <span class="font-bold text-green-800">Niveau 3 : Maîtrise Satisfaisante</span>
+                            <textarea id="niv3" rows="2" class="w-full border p-1 rounded mt-1"></textarea>
+                        </div>
+                        <div class="p-2 bg-emerald-50 border border-emerald-300 rounded">
+                            <span class="font-bold text-emerald-900">Niveau 4 : Très Bonne Maîtrise</span>
+                            <textarea id="niv4" rows="2" class="w-full border p-1 rounded mt-1"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 pt-4">
+                    <button type="button" onclick="generateSheet(true)" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow flex-1">
+                        📋 Afficher le Document Imprimable
+                    </button>
+                    <button type="button" onclick="window.print()" class="bg-gray-800 hover:bg-black text-white font-bold py-3 px-6 rounded-lg shadow flex-1">
+                        🖨️ Imprimer / Exporter PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ZONE D'AFFICHAGE DU DOCUMENT -->
+        <div id="output" class="bg-white p-8 shadow-xl rounded-xl border border-gray-300">
+            <div class="text-center text-gray-400 py-12 no-print">
+                <p class="text-xl">Le document généré s'affichera ici.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =====================================================================
+           GÉNÉRATEUR EPS CYCLE 3 — v2
+           Ajouts : persistance locale, liste de classe réelle (CSV / Cahier
+           Journal), exports CSV & JSON, passerelle d'intégration conforme à
+           APPLICATIONS/cahier-journal/INTEGRATIONS.md, historique, config IA
+           partagée entre applis pédagogiques.
+           ===================================================================== */
+
+        // ---------- Clés de stockage ----------
+        // Clé IA volontairement partagée : les autres applis peuvent la lire/écrire
+        // pour éviter de ressaisir la même clé 4 fois (cf. Etude-IA-Transversale §3).
+        const KEY_IA          = 'apps-pedagogiques.ia.config';
+        const KEY_CLASSE      = 'apps-pedagogiques.classe';
+        const KEY_BROUILLON   = 'eps.cycle3.brouillon.v2';
+        const KEY_HISTORIQUE  = 'eps.cycle3.historique.v2';
+        const KEY_INTEGRATION = 'eps.cycle3.integration.v2';
+
+        let currentMode = 'seance';
+        let classe   = { nom: '', eleves: [] };
+        let scores   = {};   // { eleveId: { tech, tact, role } }
+        let historique = [];
+        let autosaveTimer = null;
+
+        const NIVEAUX_LIB = { 1: 'N1 - Insuffisant', 2: 'N2 - Fragile', 3: 'N3 - Satisfaisant', 4: 'N4 - Expert' };
+
+        const competenciesData = {
+            CA1: [
+                "Courir, sauter, lancer à des intensités ou des distances maximales.",
+                "Réaliser des efforts dans des épreuves combinées.",
+                "Mesurer et apprécier des performances (chrono, décamètre).",
+                "Remplir des rôles d'observateur, de juge ou de chronométreur."
+            ],
+            CA2: [
+                "Réaliser un parcours dans un environnement naturel ou aménagé.",
+                "Adapter son déplacement aux incertitudes du milieu.",
+                "Gérer ses ressources pour revenir au point de départ en toute sécurité.",
+                "Assurer sa propre sécurité et celle de ses camarades."
+            ],
+            CA3: [
+                "S'exprimer librement ou en suivant une thématique par le geste.",
+                "Concevoir et réaliser une prestation scénique devant un public.",
+                "Synchroniser ses actions avec celles de ses partenaires.",
+                "Porter un regard critique et bienveillant sur la prestation des autres."
+            ],
+            CA4: [
+                "S'organiser tactiquement pour faire basculer le rapport de force.",
+                "Rechercher le gain du match en respectant partenaires et adversaires.",
+                "Coordonner ses actions pour attaquer ou défendre.",
+                "Remplir les rôles d'arbitre, de marqueur ou d'observateur."
+            ]
+        };
+
+        const demoDatabase = {
+            seance: {
+                titre: "Se déplacer sur 10 mètres sans reprise d'appui",
+                niveau: "CM1",
+                apsa: "Natation",
+                seanceInfo: "Séance 2/6",
+                ca: "CA2",
+                echauffement: "Immersions complètes et battements de jambes au bord du bassin avec frite.",
+                situationMain: "S'élancer du bord, se laisser flotter en fusée dorsale ou ventrale et parcourir 10m en battements avec ou sans planche.",
+                differenciation: "+ Facile : Utilisation d'une frite sous les aisselles.\n+ Difficile : Parcours 10m en immersion partielle sans matériel.",
+                materiel: "8 frites, 10 planches, 2 lignes d'eau. Vigilance : effectif compté à chaque entrée/sortie du bassin.",
+                bilan: "Sensibilisation à l'allongement du corps et au contrôle de la respiration.",
+                svg: `<svg viewBox="0 0 500 200" class="w-full max-h-52 mx-auto border rounded bg-sky-50">
+                    <rect x="10" y="10" width="480" height="180" fill="#bae6fd" stroke="#0284c7" stroke-width="2"/>
+                    <text x="25" y="40" font-weight="bold" fill="#0369a1" font-size="12">BASSIN (10M)</text>
+                    <circle cx="60" cy="100" r="12" fill="#2563eb"/><text x="56" y="104" fill="white" font-size="10">É1</text>
+                    <path d="M 75 100 L 400 100" stroke="#0284c7" stroke-width="3" stroke-dasharray="5,5"/>
+                    <polygon points="400,100 390,95 390,105" fill="#0284c7"/>
+                    <rect x="410" y="85" width="15" height="30" fill="#ef4444"/><text x="430" y="103" font-size="10" font-weight="bold" fill="#dc2626">Ligne 10m</text>
+                </svg>`
+            },
+            eval: {
+                titre: "Évaluation Bilan Natation Cycle 3",
+                niveau: "CM1",
+                apsa: "Natation",
+                seanceInfo: "Évaluation CA2",
+                ca: "CA2",
+                critereMoteur: "Capacité à parcourir 10m en flottaison/propulsion tête hors de l'eau ou immergée.",
+                critereTactique: "Gestion du souffle et maitrise de l'équilibre horizontal aquatique.",
+                critereSocial: "Respect des consignes de sécurité du bassin et écoute des consignes.",
+                niv1: "Refuse d'immerger la tête ou panique dès qu'il n'a plus pied. Parcourt moins de 3m.",
+                niv2: "Parcourt 5 à 10m avec frite ou planche mais reste très crispé. Respiration sacadée.",
+                niv3: "Rejoint la ligne des 10m sans matériel en autonomie complète. Tête hors de l'eau sur la fin.",
+                niv4: "Parcourt plus de 15m avec aisance, respiration fluide et propulsion efficace."
+            }
+        };
+
+        // =====================================================================
+        // UTILITAIRES
+        // =====================================================================
+        function getValue(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        }
+        function setValue(id, v) {
+            const el = document.getElementById(id);
+            if (el) el.value = v == null ? '' : v;
+        }
+        function getFormattedText(id) {
+            return escapeHtml(getValue(id)).replace(/\n/g, '<br>');
+        }
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function lire(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch (e) { return fallback; }
+        }
+        function ecrire(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); }
+            catch (e) { console.warn('Stockage local indisponible', e); }
+        }
+        function togglePanel(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('hidden');
+        }
+        function telecharger(nomFichier, contenu, mime) {
+            const blob = new Blob([contenu], { type: (mime || 'application/octet-stream') + ';charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nomFichier;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        function horodatage() {
+            const d = new Date();
+            const p = (n) => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
+        }
+        function statutCJ(message, ok) {
+            const el = document.getElementById('cjStatus');
+            if (!el) return;
+            el.className = 'text-xs mt-3 p-2 rounded border ' +
+                (ok ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800');
+            el.textContent = message;
+        }
+
+        // =====================================================================
+        // 1. CONFIG IA PARTAGÉE
+        // =====================================================================
+        function saveIaConfig() {
+            ecrire(KEY_IA, {
+                fournisseur: getValue('apiProvider'),
+                cle: getValue('apiKey'),
+                modeleGemini: getValue('geminiModel'),
+                modeleOpenrouter: getValue('openrouterModel'),
+                modelePersonnalise: getValue('customOpenrouterModel'),
+                majLe: new Date().toISOString()
+            });
+        }
+        function loadIaConfig() {
+            const c = lire(KEY_IA, null);
+            if (!c) return;
+            if (c.fournisseur) setValue('apiProvider', c.fournisseur);
+            if (c.cle) setValue('apiKey', c.cle);
+            if (c.modeleGemini) setValue('geminiModel', c.modeleGemini);
+            if (c.modeleOpenrouter) setValue('openrouterModel', c.modeleOpenrouter);
+            if (c.modelePersonnalise) setValue('customOpenrouterModel', c.modelePersonnalise);
+        }
+
+        // =====================================================================
+        // 2. LISTE DE CLASSE
+        // =====================================================================
+        function saveClasse() {
+            classe.nom = getValue('classeNom');
+            ecrire(KEY_CLASSE, classe);
+            renderClasse();
+        }
+        function loadClasse() {
+            classe = lire(KEY_CLASSE, { nom: '', eleves: [] });
+            if (!classe || typeof classe !== 'object') classe = { nom: '', eleves: [] };
+            if (!Array.isArray(classe.eleves)) classe.eleves = [];
+            setValue('classeNom', classe.nom || '');
+            renderClasse();
+        }
+        function nouvelIdEleve() {
+            return 'EPS-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+        }
+        function ajouterEleve() {
+            const prenom = getValue('newElevePrenom').trim();
+            if (!prenom) { alert('Le prénom est obligatoire.'); return; }
+            classe.eleves.push({
+                id: nouvelIdEleve(),
+                prenom,
+                nom: getValue('newEleveNom').trim(),
+                niveau: getValue('newEleveNiveau').trim() || getValue('niveau'),
+                source: 'manuel'
+            });
+            setValue('newElevePrenom', '');
+            setValue('newEleveNom', '');
+            saveClasse();
+        }
+        function supprimerEleve(id) {
+            classe.eleves = classe.eleves.filter(e => e.id !== id);
+            delete scores[id];
+            saveClasse();
+            sauvegardeBrouillon();
+        }
+        function renderClasse() {
+            const box = document.getElementById('classeListe');
+            const cnt = document.getElementById('classeCount');
+            if (cnt) cnt.textContent = classe.eleves.length;
+            if (!box) return;
+            if (!classe.eleves.length) {
+                box.innerHTML = '<div class="p-4 text-center text-gray-400 text-xs">Aucun élève : la grille utilisera 25 lignes génériques.</div>';
+                return;
+            }
+            box.innerHTML = classe.eleves.map((e, i) => `
+                <div class="flex items-center gap-2 p-2 hover:bg-gray-50">
+                    <span class="text-gray-400 w-6 text-xs">${i + 1}</span>
+                    <span class="flex-1 font-medium">${escapeHtml(e.prenom)} ${escapeHtml(e.nom || '')}</span>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${escapeHtml(e.niveau || '')}</span>
+                    <span class="text-[10px] text-gray-400">${escapeHtml(e.source || '')}</span>
+                    <button type="button" onclick="supprimerEleve('${e.id}')" class="text-red-600 hover:text-red-800 px-2 font-bold">×</button>
+                </div>
+            `).join('');
+        }
+
+        /** Détecte le séparateur et parse un CSV simple (guillemets gérés). */
+        function parseCSV(texte) {
+            const contenu = texte.replace(/^﻿/, '');
+            const premiere = contenu.split(/\r?\n/)[0] || '';
+            const sep = (premiere.split(';').length >= premiere.split(',').length) ? ';' : ',';
+            const lignes = [];
+            let champ = '', ligne = [], dansGuillemets = false;
+            for (let i = 0; i < contenu.length; i++) {
+                const c = contenu[i];
+                if (dansGuillemets) {
+                    if (c === '"' && contenu[i + 1] === '"') { champ += '"'; i++; }
+                    else if (c === '"') dansGuillemets = false;
+                    else champ += c;
+                } else if (c === '"') dansGuillemets = true;
+                else if (c === sep) { ligne.push(champ); champ = ''; }
+                else if (c === '\n') { ligne.push(champ); lignes.push(ligne); ligne = []; champ = ''; }
+                else if (c !== '\r') champ += c;
+            }
+            if (champ !== '' || ligne.length) { ligne.push(champ); lignes.push(ligne); }
+            return lignes.filter(l => l.some(v => String(v).trim() !== ''));
+        }
+
+        function importClasseCSV(evt) {
+            const fichier = evt.target.files && evt.target.files[0];
+            if (!fichier) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    const lignes = parseCSV(String(reader.result));
+                    if (!lignes.length) throw new Error('Fichier vide.');
+                    const entete = lignes[0].map(h => h.trim().toLowerCase());
+                    const idxNom     = entete.findIndex(h => h.startsWith('nom'));
+                    const idxPrenom  = entete.findIndex(h => h.startsWith('pr'));
+                    const idxClasse  = entete.findIndex(h => h.startsWith('classe') || h.startsWith('niveau'));
+                    const avecEntete = idxPrenom !== -1 || idxNom !== -1;
+                    const corps = avecEntete ? lignes.slice(1) : lignes;
+
+                    const nouveaux = [];
+                    corps.forEach(l => {
+                        const prenom = (avecEntete && idxPrenom !== -1 ? l[idxPrenom] : l[1] || l[0] || '').trim();
+                        const nom    = (avecEntete && idxNom    !== -1 ? l[idxNom]    : l[0] || '').trim();
+                        if (!prenom && !nom) return;
+                        nouveaux.push({
+                            id: nouvelIdEleve(),
+                            prenom: prenom || nom,
+                            nom: prenom ? nom : '',
+                            niveau: ((avecEntete && idxClasse !== -1 ? l[idxClasse] : '') || '').trim(),
+                            source: 'csv'
+                        });
+                    });
+                    if (!nouveaux.length) throw new Error('Aucun élève reconnu (attendu : Nom;Prénom;Classe).');
+
+                    if (classe.eleves.length && !confirm(`Remplacer les ${classe.eleves.length} élèves existants par les ${nouveaux.length} du fichier ?`)) return;
+                    classe.eleves = nouveaux;
+                    scores = {};
+                    saveClasse();
+                    sauvegardeBrouillon();
+                    alert(`${nouveaux.length} élèves importés.`);
+                    if (currentMode === 'eval') generateSheet(false);
+                } catch (err) {
+                    alert('Import CSV impossible : ' + err.message);
+                } finally {
+                    evt.target.value = '';
+                }
+            };
+            reader.readAsText(fichier, 'UTF-8');
+        }
+
+        function baseUrlCJ() {
+            return (getValue('cjBaseUrl') || 'http://localhost:4000').replace(/\/$/, '');
+        }
+
+        async function pullElevesCahierJournal() {
+            statutCJ('Connexion au Cahier Journal…', true);
+            try {
+                const res = await fetch(`${baseUrlCJ()}/api/integrations/export/eleves`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!Array.isArray(data) || !data.length) throw new Error('Aucun élève renvoyé.');
+                classe.eleves = data.map(e => ({
+                    id: String(e.id),
+                    prenom: e.prenom || '',
+                    nom: e.nom || '',
+                    niveau: e.niveau_code || '',
+                    source: 'cahier-journal'
+                }));
+                scores = {};
+                saveClasse();
+                sauvegardeBrouillon();
+                statutCJ(`${classe.eleves.length} élèves récupérés depuis le Cahier Journal.`, true);
+                if (currentMode === 'eval') generateSheet(false);
+            } catch (err) {
+                statutCJ("Échec : " + err.message + " — backend éteint, mauvaise URL, ou blocage CORS (ouvrez cette page via demarrer-EPS.bat).", false);
+            }
+        }
+
+        // =====================================================================
+        // 3. INTÉGRATION CAHIER JOURNAL
+        // =====================================================================
+        function saveIntegration() {
+            ecrire(KEY_INTEGRATION, {
+                baseUrl: getValue('cjBaseUrl'),
+                appCode: getValue('cjAppCode'),
+                apiKey: getValue('cjApiKey'),
+                evaluationId: getValue('cjEvaluationId'),
+                objMoteur: getValue('cjObjMoteur'),
+                objTactique: getValue('cjObjTactique'),
+                objSocial: getValue('cjObjSocial'),
+                seanceDate: getValue('cjSeanceDate'),
+                seanceHeure: getValue('cjSeanceHeure'),
+                seanceDuree: getValue('cjSeanceDuree'),
+                seanceLieu: getValue('cjSeanceLieu')
+            });
+        }
+        function loadIntegration() {
+            const c = lire(KEY_INTEGRATION, {});
+            setValue('cjBaseUrl', c.baseUrl || 'http://localhost:4000');
+            setValue('cjAppCode', c.appCode || 'eps');
+            setValue('cjApiKey', c.apiKey || '');
+            setValue('cjEvaluationId', c.evaluationId || '');
+            setValue('cjObjMoteur', c.objMoteur || '');
+            setValue('cjObjTactique', c.objTactique || '');
+            setValue('cjObjSocial', c.objSocial || '');
+            setValue('cjSeanceDate', c.seanceDate || new Date().toISOString().slice(0, 10));
+            setValue('cjSeanceHeure', c.seanceHeure || '14:00');
+            setValue('cjSeanceDuree', c.seanceDuree || '60');
+            setValue('cjSeanceLieu', c.seanceLieu || '');
+        }
+
+        async function chargerEvaluationsCJ() {
+            statutCJ('Lecture des évaluations et objectifs…', true);
+            try {
+                const [evalRes, objRes] = await Promise.all([
+                    fetch(`${baseUrlCJ()}/api/integrations/export/evaluations`),
+                    fetch(`${baseUrlCJ()}/api/integrations/export/objectifs`)
+                ]);
+                if (!evalRes.ok || !objRes.ok) throw new Error('HTTP ' + evalRes.status + '/' + objRes.status);
+                const evals = await evalRes.json();
+                const objs  = await objRes.json();
+                const lignesEval = (evals || []).slice(0, 40)
+                    .map(e => `#${e.id} — ${escapeHtml(e.nom || e.titre || '(sans nom)')}`).join('<br>');
+                const lignesObj = (objs || []).filter(o => /eps|physique|sport/i.test(
+                        [o.domaine, o.sous_domaine, o.libelle].join(' ')))
+                    .slice(0, 40)
+                    .map(o => `#${o.id} — ${escapeHtml(o.libelle)}`).join('<br>');
+                const el = document.getElementById('cjStatus');
+                el.className = 'text-xs mt-3 p-2 rounded border bg-blue-50 border-blue-300 text-blue-900 max-h-64 overflow-y-auto';
+                el.innerHTML = `<strong>Évaluations (${(evals || []).length})</strong><br>${lignesEval || '—'}
+                    <hr class="my-2"><strong>Objectifs EPS repérés</strong><br>${lignesObj || 'Aucun objectif EPS ; utilisez tout objectif pertinent via /export/objectifs.'}`;
+            } catch (err) {
+                statutCJ('Échec : ' + err.message + ' — vérifiez que le backend tourne sur ' + baseUrlCJ(), false);
+            }
+        }
+
+        /** Construit le message 'evaluation.resultats' du contrat INTEGRATIONS.md §3. */
+        function construireMessageResultats() {
+            const evaluationId = getValue('cjEvaluationId').trim();
+            if (!evaluationId) throw new Error("Renseignez l'ID de l'évaluation cible du Cahier Journal.");
+            const mapObjectifs = {
+                tech: getValue('cjObjMoteur').trim(),
+                tact: getValue('cjObjTactique').trim(),
+                role: getValue('cjObjSocial').trim()
+            };
+            const eleves = listeElevesGrille();
+            const resultats = [];
+            eleves.forEach(el => {
+                const s = scores[el.id] || {};
+                ['tech', 'tact', 'role'].forEach(crit => {
+                    const valeur = parseInt(s[crit] || '0', 10);
+                    if (!valeur) return;
+                    const r = { valeur: 'N' + valeur };
+                    if (mapObjectifs[crit]) r.objectifId = Number(mapObjectifs[crit]);
+                    // Élèves issus du Cahier Journal : on renvoie directement l'id local,
+                    // sinon on passe par le mapping d'identifiants (integration_liens).
+                    if (el.source === 'cahier-journal') r.eleveId = Number(el.id);
+                    else r.eleveDistantId = el.id;
+                    resultats.push(r);
+                });
+            });
+            if (!resultats.length) throw new Error('Aucune note saisie : renseignez au moins un critère.');
+            return {
+                type: 'evaluation.resultats',
+                emis_le: new Date().toISOString(),
+                payload: { evaluationId: Number(evaluationId), resultats }
+            };
+        }
+
+        /**
+         * Construit le message 'seance.realisee' ingéré par
+         * backend/src/integrations/handlers.js du Cahier Journal.
+         * La fiche de préparation est remplie directement depuis le déroulement EPS.
+         */
+        function construireMessageSeance() {
+            const titre = getValue('titre').trim();
+            if (!titre) throw new Error('Renseignez le titre de la séance.');
+            const date = getValue('cjSeanceDate');
+            if (!date) throw new Error('Renseignez la date de la séance.');
+
+            const caEl = document.getElementById('caSelect');
+            const caLibelle = caEl ? caEl.options[caEl.selectedIndex].text : '';
+            const competences = Array.from(document.querySelectorAll('input[name="compSpec"]:checked')).map(c => c.value);
+            const niveauSaisi = getValue('niveau');
+            // « Cycle 3 (CM1/CM2/6ème) » -> codes de niveaux séparés, ignorés côté
+            // Cahier Journal s'ils n'existent pas dans sa table `niveaux`.
+            const niveaux = niveauSaisi.startsWith('Cycle 3')
+                ? ['CM1', 'CM2']
+                : [niveauSaisi];
+
+            const enListe = (v) => String(v || '').split('\n').map(l => l.trim()).filter(Boolean);
+            const phase = (nom, duree, consigne, diffBasse, diffHaute) => ({
+                phase: nom, duree, consigne: consigne || '', organisation: 'collectif',
+                diffHaute: diffHaute || '', diffBasse: diffBasse || ''
+            });
+
+            const duree = Number(getValue('cjSeanceDuree')) || 60;
+            const differenciation = getValue('differenciation');
+
+            return {
+                type: 'seance.realisee',
+                emis_le: new Date().toISOString(),
+                payload: {
+                    // Idempotence : ré-envoyer la même séance met à jour au lieu de dupliquer.
+                    distanteId: `EPS-${date}-${(getValue('apsa') || 'eps').replace(/\W+/g, '-').toLowerCase()}-${titre.replace(/\W+/g, '-').toLowerCase().slice(0, 40)}`,
+                    date,
+                    heureDebut: getValue('cjSeanceHeure') || '14:00',
+                    dureeMin: duree,
+                    titre,
+                    description: [caLibelle, getValue('seanceInfo'), getValue('situationMain')].filter(Boolean).join('\n'),
+                    materiel: getValue('materiel'),
+                    lieu: getValue('cjSeanceLieu'),
+                    matiere: 'EPS',
+                    statut: 'realise',
+                    source: getValue('apiProvider') === 'demo' ? 'manuel' : 'ia',
+                    niveaux,
+                    fiche: {
+                        competences: competences.length ? competences : [caLibelle].filter(Boolean),
+                        objectifs: enListe(getValue('bilan')).length ? enListe(getValue('bilan')) : ['Savoir '],
+                        materiel: enListe(getValue('materiel')),
+                        deroulement: [
+                            phase('Échauffement', Math.round(duree * 0.2), getValue('echauffement')),
+                            phase('Situation principale', Math.round(duree * 0.6), getValue('situationMain'), differenciation),
+                            phase('Bilan / retour au calme', Math.round(duree * 0.2), getValue('bilan'))
+                        ],
+                        bilan: getValue('bilan') || 'Ce qui a fonctionné : \nDifficultés rencontrées : \nPour la prochaine séance : '
+                    }
+                }
+            };
+        }
+
+        /** Envoi générique d'un message au webhook du Cahier Journal. */
+        async function envoyerMessageCJ(message, resume) {
+            const code = getValue('cjAppCode').trim() || 'eps';
+            const cle  = getValue('cjApiKey').trim();
+            const res = await fetch(`${baseUrlCJ()}/api/integrations/webhooks/${encodeURIComponent(code)}`, {
+                method: 'POST',
+                headers: Object.assign({ 'Content-Type': 'application/json' }, cle ? { 'X-Api-Key': cle } : {}),
+                body: JSON.stringify({ type: message.type, payload: message.payload })
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(json.error || ('HTTP ' + res.status));
+            statutCJ(resume(json), true);
+        }
+
+        async function envoyerResultatsAPI() {
+            try {
+                const message = construireMessageResultats();
+                statutCJ(`Envoi de ${message.payload.resultats.length} résultats…`, true);
+                await envoyerMessageCJ(message, j => `✅ ${j.importes || 0} résultats importés dans l'évaluation #${j.evaluationId}.`);
+            } catch (err) {
+                statutCJ('Échec : ' + err.message, false);
+            }
+        }
+
+        async function envoyerSeanceAPI() {
+            try {
+                const message = construireMessageSeance();
+                statutCJ('Envoi de la séance…', true);
+                await envoyerMessageCJ(message, j =>
+                    `✅ Séance #${j.seanceId} ${j.cree ? 'créée' : 'mise à jour'} dans le Cahier Journal` +
+                    ` (${j.niveaux} niveau(x)${j.fiche ? ', fiche de prép remplie' : ''}).`);
+            } catch (err) {
+                statutCJ('Échec : ' + err.message, false);
+            }
+        }
+
+        function telechargerEvenementFichier(quoi) {
+            try {
+                const message = quoi === 'seance' ? construireMessageSeance() : construireMessageResultats();
+                const nom = `${horodatage()}_eps_${message.type}.json`;
+                telecharger(nom, JSON.stringify(message, null, 2), 'application/json');
+                statutCJ(`Fichier « ${nom} » généré. Déposez-le dans « <dossierEchange>/inbox/cahier-journal/ » puis lancez « Traiter l'inbox » dans le Cahier Journal.`, true);
+            } catch (err) {
+                statutCJ('Échec : ' + err.message, false);
+            }
+        }
+
+        // =====================================================================
+        // 4. EXPORTS
+        // =====================================================================
+        function listeElevesGrille() {
+            if (classe.eleves.length) return classe.eleves;
+            return Array.from({ length: 25 }, (_, i) => ({
+                id: 'GEN-' + (i + 1),
+                prenom: 'Élève ' + (i + 1),
+                nom: '',
+                niveau: getValue('niveau'),
+                source: 'generique'
+            }));
+        }
+
+        function niveauGlobal(s) {
+            const vals = ['tech', 'tact', 'role']
+                .map(k => parseInt((s || {})[k] || '0', 10))
+                .filter(v => v > 0);
+            if (!vals.length) return null;
+            const moy = vals.reduce((a, b) => a + b, 0) / vals.length;
+            let code, libelle;
+            if (moy < 1.5)      { code = 'N1'; libelle = 'Insuffisant'; }
+            else if (moy < 2.5) { code = 'N2'; libelle = 'Fragile'; }
+            else if (moy < 3.5) { code = 'N3'; libelle = 'Satisfaisant'; }
+            else                { code = 'N4'; libelle = 'Expert'; }
+            return { moyenne: moy, code, libelle };
+        }
+
+        function exportGrilleCSV() {
+            const eleves = listeElevesGrille();
+            const sep = ';';
+            const lignes = [['Nom', 'Prénom', 'Niveau', 'APSA', 'Technique', 'Tactique', 'Rôle', 'Moyenne', 'Niveau global'].join(sep)];
+            let saisies = 0;
+            eleves.forEach(el => {
+                const s = scores[el.id] || {};
+                const g = niveauGlobal(s);
+                if (g) saisies++;
+                lignes.push([
+                    el.nom || '', el.prenom || '', el.niveau || getValue('niveau'), getValue('apsa'),
+                    s.tech ? 'N' + s.tech : '', s.tact ? 'N' + s.tact : '', s.role ? 'N' + s.role : '',
+                    g ? g.moyenne.toFixed(2).replace('.', ',') : '',
+                    g ? g.code + ' - ' + g.libelle : ''
+                ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(sep));
+            });
+            if (!saisies && !confirm('Aucune note saisie. Exporter quand même la grille vierge ?')) return;
+            // BOM UTF-8 : ouverture directe dans Excel FR sans mojibake.
+            telecharger(`EPS_notes_${(getValue('apsa') || 'grille').replace(/\W+/g, '-')}_${horodatage()}.csv`,
+                '﻿' + lignes.join('\r\n'), 'text/csv');
+        }
+
+        function collecterDocument() {
+            const caEl = document.getElementById('caSelect');
+            return {
+                version: 2,
+                genereLe: new Date().toISOString(),
+                mode: currentMode,
+                classe: { nom: classe.nom, effectif: classe.eleves.length },
+                entete: {
+                    titre: getValue('titre'), niveau: getValue('niveau'), apsa: getValue('apsa'),
+                    periode: getValue('seanceInfo'), ca: getValue('caSelect'),
+                    caLibelle: caEl ? caEl.options[caEl.selectedIndex].text : ''
+                },
+                competences: Array.from(document.querySelectorAll('input[name="compSpec"]:checked')).map(c => c.value),
+                seance: {
+                    echauffement: getValue('echauffement'), situationMain: getValue('situationMain'),
+                    svg: getValue('schemaSvgCode'), differenciation: getValue('differenciation'),
+                    materiel: getValue('materiel'), bilan: getValue('bilan')
+                },
+                evaluation: {
+                    critereMoteur: getValue('critereMoteur'), critereTactique: getValue('critereTactique'),
+                    critereSocial: getValue('critereSocial'),
+                    niv1: getValue('niv1'), niv2: getValue('niv2'), niv3: getValue('niv3'), niv4: getValue('niv4'),
+                    resultats: listeElevesGrille().map(el => {
+                        const s = scores[el.id] || {};
+                        const g = niveauGlobal(s);
+                        return {
+                            eleveId: el.id, prenom: el.prenom, nom: el.nom,
+                            technique: s.tech || null, tactique: s.tact || null, role: s.role || null,
+                            moyenne: g ? Number(g.moyenne.toFixed(2)) : null, niveauGlobal: g ? g.code : null
+                        };
+                    }).filter(r => r.technique || r.tactique || r.role)
+                }
+            };
+        }
+
+        function exportDocumentJSON() {
+            const doc = collecterDocument();
+            telecharger(`EPS_${doc.mode}_${(doc.entete.apsa || 'document').replace(/\W+/g, '-')}_${horodatage()}.json`,
+                JSON.stringify(doc, null, 2), 'application/json');
+        }
+
+        // =====================================================================
+        // 5. PERSISTANCE (BROUILLON) & HISTORIQUE
+        // =====================================================================
+        const CHAMPS_FORM = ['titre', 'niveau', 'apsa', 'seanceInfo', 'caSelect', 'echauffement',
+            'situationMain', 'schemaSvgCode', 'differenciation', 'materiel', 'bilan',
+            'critereMoteur', 'critereTactique', 'critereSocial', 'niv1', 'niv2', 'niv3', 'niv4', 'aiPrompt'];
+
+        function sauvegardeBrouillon() {
+            const form = {};
+            CHAMPS_FORM.forEach(id => { form[id] = getValue(id); });
+            const competences = Array.from(document.querySelectorAll('input[name="compSpec"]:checked')).map(c => c.value);
+            ecrire(KEY_BROUILLON, { mode: currentMode, form, scores, competences, majLe: new Date().toISOString() });
+            const badge = document.getElementById('saveBadge');
+            if (badge) {
+                const d = new Date();
+                badge.textContent = 'Brouillon enregistré à ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            }
+        }
+        function planifierSauvegarde() {
+            clearTimeout(autosaveTimer);
+            autosaveTimer = setTimeout(sauvegardeBrouillon, 600);
+        }
+        function chargerBrouillon() {
+            const b = lire(KEY_BROUILLON, null);
+            if (!b) return false;
+            if (b.mode) currentMode = b.mode;
+            Object.keys(b.form || {}).forEach(id => setValue(id, b.form[id]));
+            scores = b.scores || {};
+            if (Array.isArray(b.competences)) {
+                updateSpecificCompetencies();
+                document.querySelectorAll('input[name="compSpec"]').forEach(c => {
+                    c.checked = b.competences.indexOf(c.value) !== -1;
+                });
+            }
+            const badge = document.getElementById('saveBadge');
+            if (badge && b.majLe) badge.textContent = 'Brouillon restauré (' + new Date(b.majLe).toLocaleString('fr-FR') + ')';
+            return true;
+        }
+        function resetBrouillon() {
+            if (!confirm('Effacer le brouillon en cours (formulaire + notes saisies) ? La liste de classe et l\'historique sont conservés.')) return;
+            localStorage.removeItem(KEY_BROUILLON);
+            CHAMPS_FORM.forEach(id => setValue(id, ''));
+            setValue('niveau', 'CM2');
+            setValue('caSelect', 'CA4');
+            scores = {};
+            updateSpecificCompetencies();
+            document.getElementById('output').innerHTML = '<div class="text-center text-gray-400 py-12 no-print"><p class="text-xl">Le document généré s\'affichera ici.</p></div>';
+            sauvegardeBrouillon();
+        }
+
+        function chargerHistorique() {
+            historique = lire(KEY_HISTORIQUE, []);
+            if (!Array.isArray(historique)) historique = [];
+            renderHistorique();
+        }
+        function archiverDocument() {
+            const doc = collecterDocument();
+            if (!doc.entete.titre) return;
+            historique.unshift({
+                id: 'H-' + Date.now(),
+                date: doc.genereLe,
+                mode: doc.mode,
+                titre: doc.entete.titre,
+                apsa: doc.entete.apsa,
+                niveau: doc.entete.niveau,
+                doc
+            });
+            historique = historique.slice(0, 50); // garde les 50 derniers
+            ecrire(KEY_HISTORIQUE, historique);
+            renderHistorique();
+        }
+        function renderHistorique() {
+            const box = document.getElementById('historiqueListe');
+            const cnt = document.getElementById('histoCount');
+            if (cnt) cnt.textContent = historique.length;
+            if (!box) return;
+            if (!historique.length) {
+                box.innerHTML = '<div class="p-4 text-center text-gray-400 text-xs">Aucun document archivé pour l\'instant.</div>';
+                return;
+            }
+            box.innerHTML = historique.map(h => `
+                <div class="flex items-center gap-2 p-2 hover:bg-gray-50">
+                    <span class="text-[10px] px-2 py-0.5 rounded ${h.mode === 'eval' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">${h.mode === 'eval' ? 'ÉVAL' : 'SÉANCE'}</span>
+                    <span class="flex-1 truncate">${escapeHtml(h.titre)} <span class="text-gray-400 text-xs">— ${escapeHtml(h.apsa || '')} ${escapeHtml(h.niveau || '')}</span></span>
+                    <span class="text-[10px] text-gray-400">${new Date(h.date).toLocaleDateString('fr-FR')}</span>
+                    <button type="button" onclick="rechargerHistorique('${h.id}')" class="bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-xs font-semibold">Recharger</button>
+                    <button type="button" onclick="supprimerHistorique('${h.id}')" class="text-red-600 hover:text-red-800 px-2 font-bold">×</button>
+                </div>
+            `).join('');
+        }
+        function rechargerHistorique(id) {
+            const h = historique.find(x => x.id === id);
+            if (!h) return;
+            const d = h.doc;
+            switchMode(d.mode);
+            setValue('titre', d.entete.titre); setValue('niveau', d.entete.niveau);
+            setValue('apsa', d.entete.apsa); setValue('seanceInfo', d.entete.periode);
+            setValue('caSelect', d.entete.ca);
+            updateSpecificCompetencies();
+            setValue('echauffement', d.seance.echauffement); setValue('situationMain', d.seance.situationMain);
+            setValue('schemaSvgCode', d.seance.svg); setValue('differenciation', d.seance.differenciation);
+            setValue('materiel', d.seance.materiel || ''); setValue('bilan', d.seance.bilan);
+            setValue('critereMoteur', d.evaluation.critereMoteur); setValue('critereTactique', d.evaluation.critereTactique);
+            setValue('critereSocial', d.evaluation.critereSocial);
+            setValue('niv1', d.evaluation.niv1); setValue('niv2', d.evaluation.niv2);
+            setValue('niv3', d.evaluation.niv3); setValue('niv4', d.evaluation.niv4);
+            scores = {};
+            (d.evaluation.resultats || []).forEach(r => {
+                scores[r.eleveId] = { tech: r.technique, tact: r.tactique, role: r.role };
+            });
+            sauvegardeBrouillon();
+            generateSheet(false);
+        }
+        function supprimerHistorique(id) {
+            historique = historique.filter(x => x.id !== id);
+            ecrire(KEY_HISTORIQUE, historique);
+            renderHistorique();
+        }
+
+        // =====================================================================
+        // 6. FORMULAIRE / MODES
+        // =====================================================================
+        function updateSpecificCompetencies() {
+            const caEl = document.getElementById('caSelect');
+            if (!caEl) return;
+            const ca = caEl.value;
+            const container = document.getElementById('specificCompetencies');
+            if (!container) return;
+            container.innerHTML = '';
+            if (competenciesData[ca]) {
+                competenciesData[ca].forEach((comp) => {
+                    const label = document.createElement('label');
+                    label.className = "flex items-start gap-2";
+                    label.innerHTML = `<input type="checkbox" name="compSpec" value="${escapeHtml(comp)}" checked class="mt-1"> <span>${escapeHtml(comp)}</span>`;
+                    container.appendChild(label);
+                });
+            }
+            planifierSauvegarde();
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const tabSeance = document.getElementById('tabSeance');
+            const tabEval = document.getElementById('tabEval');
+            const secSeance = document.getElementById('sectionSeanceForm');
+            const secEval = document.getElementById('sectionEvalForm');
+            const labelTitre = document.getElementById('labelTitre');
+            const aiTitle = document.getElementById('aiTitle');
+            const btnAiText = document.getElementById('btnAiText');
+
+            if (mode === 'seance') {
+                tabSeance.className = "px-6 py-2 rounded-lg font-bold text-sm bg-blue-600 text-white shadow";
+                tabEval.className = "px-6 py-2 rounded-lg font-bold text-sm bg-blue-950 text-blue-200 hover:bg-blue-800";
+                secSeance.classList.remove('hidden');
+                secEval.classList.add('hidden');
+                labelTitre.innerText = "Titre de la séance";
+                aiTitle.innerText = "Générer une Séance par IA";
+                btnAiText.innerText = "🚀 Générer Séance + Schéma";
+            } else {
+                tabEval.className = "px-6 py-2 rounded-lg font-bold text-sm bg-purple-600 text-white shadow";
+                tabSeance.className = "px-6 py-2 rounded-lg font-bold text-sm bg-blue-950 text-blue-200 hover:bg-blue-800";
+                secEval.classList.remove('hidden');
+                secSeance.classList.add('hidden');
+                labelTitre.innerText = "Titre du bilan d'évaluation";
+                aiTitle.innerText = "Générer une Grille d'Évaluation par IA";
+                btnAiText.innerText = "📊 Générer la Grille d'Évaluation";
+            }
+            planifierSauvegarde();
+        }
+
+        function toggleApiKeyInput() {
+            const provider = getValue('apiProvider');
+            const apiKeyContainer = document.getElementById('apiKeyContainer');
+            const openrouterModelContainer = document.getElementById('openrouterModelContainer');
+            const geminiModelContainer = document.getElementById('geminiModelContainer');
+            const keyHint = document.getElementById('keyHint');
+
+            if (provider !== 'demo' && provider !== 'ollama') {
+                apiKeyContainer.classList.remove('hidden');
+                if (provider === 'gemini') keyHint.innerText = "Clé Google AI Studio (AIzaSy... ou AQ....)";
+                else if (provider === 'openrouter') keyHint.innerText = "Clé OpenRouter (sk-or-v1-...)";
+                else if (provider === 'anthropic') keyHint.innerText = "Clé Anthropic (sk-ant-...)";
+                else if (provider === 'deepseek') keyHint.innerText = "Clé DeepSeek (sk-...)";
+                else keyHint.innerText = "Clé API";
+            } else {
+                apiKeyContainer.classList.add('hidden');
+            }
+
+            openrouterModelContainer.classList.toggle('hidden', provider !== 'openrouter');
+            geminiModelContainer.classList.toggle('hidden', provider !== 'gemini');
+            toggleCustomModelInput();
+        }
+
+        function toggleCustomModelInput() {
+            const provider = getValue('apiProvider');
+            const container = document.getElementById('customModelContainer');
+            const hint = document.getElementById('customModelHint');
+            const visible = (provider === 'openrouter' && getValue('openrouterModel') === 'custom') || provider === 'ollama';
+            container.classList.toggle('hidden', !visible);
+            if (hint) hint.innerText = provider === 'ollama' ? 'Modèle Ollama (ex: llama3.1)' : 'ID Modèle Personnalisé';
+        }
+
+        function applyPresetPrompt() {
+            const preset = document.getElementById('presetSelect').value;
+            if (preset) {
+                document.getElementById('aiPrompt').value = preset;
+                planifierSauvegarde();
+            }
+        }
+
+        // ---------- Calcul temps réel d'un élève ----------
+        function calcPupilScore(eleveId) {
+            const tech = parseInt(getValue(`tech_${eleveId}`) || '0', 10);
+            const tact = parseInt(getValue(`tact_${eleveId}`) || '0', 10);
+            const role = parseInt(getValue(`role_${eleveId}`) || '0', 10);
+            scores[eleveId] = { tech: tech || null, tact: tact || null, role: role || null };
+
+            const targetEl = document.getElementById(`global_${eleveId}`);
+            if (targetEl) {
+                const g = niveauGlobal(scores[eleveId]);
+                if (!g) {
+                    targetEl.innerHTML = '<span class="text-gray-400 font-normal text-xs">-</span>';
+                } else {
+                    const couleurs = {
+                        N1: 'bg-red-100 text-red-800 border-red-200',
+                        N2: 'bg-orange-100 text-orange-800 border-orange-200',
+                        N3: 'bg-green-100 text-green-800 border-green-200',
+                        N4: 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                    };
+                    targetEl.innerHTML = `<span class="${couleurs[g.code]} font-bold px-2 py-0.5 rounded text-xs border">${g.code} - ${g.libelle} (${g.moyenne.toFixed(1)})</span>`;
+                }
+            }
+            majSynthese();
+            planifierSauvegarde();
+        }
+
+        /** Répartition de la classe par niveau global — lecture rapide pour le bilan. */
+        function majSynthese() {
+            const box = document.getElementById('syntheseClasse');
+            if (!box) return;
+            const eleves = listeElevesGrille();
+            const compte = { N1: 0, N2: 0, N3: 0, N4: 0 };
+            let evalues = 0;
+            eleves.forEach(el => {
+                const g = niveauGlobal(scores[el.id]);
+                if (g) { compte[g.code]++; evalues++; }
+            });
+            if (!evalues) {
+                box.innerHTML = '<span class="text-gray-400">Aucun élève évalué pour le moment.</span>';
+                return;
+            }
+            const couleurs = { N1: 'bg-red-500', N2: 'bg-orange-500', N3: 'bg-green-500', N4: 'bg-emerald-600' };
+            box.innerHTML = `
+                <div class="flex items-center gap-4 flex-wrap">
+                    <span class="font-bold">${evalues}/${eleves.length} élèves évalués</span>
+                    ${['N1', 'N2', 'N3', 'N4'].map(n => `
+                        <span class="flex items-center gap-1">
+                            <span class="inline-block w-3 h-3 rounded ${couleurs[n]}"></span>
+                            ${n} : <strong>${compte[n]}</strong> (${Math.round(compte[n] / evalues * 100)}%)
+                        </span>`).join('')}
+                </div>
+                <div class="flex h-3 rounded overflow-hidden mt-2 border">
+                    ${['N1', 'N2', 'N3', 'N4'].map(n => compte[n] ? `<div class="${couleurs[n]}" style="width:${compte[n] / evalues * 100}%"></div>` : '').join('')}
+                </div>`;
+        }
+
+        // =====================================================================
+        // 7. APPEL IA
+        // =====================================================================
+        function safeParseJSON(text) {
+            try {
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error("Impossible de lire le format JSON renvoyé par l'IA.");
+            }
+        }
+
+        async function fetchAndFillFromAPI() {
+            const promptInput = getValue('aiPrompt').trim();
+            const provider = getValue('apiProvider');
+            const apiKey = getValue('apiKey').trim();
+            const spinner = document.getElementById('btnSpinner');
+
+            if (!promptInput) { alert("Veuillez entrer un sujet !"); return; }
+            if (provider !== 'demo' && provider !== 'ollama' && !apiKey) {
+                alert(`Veuillez saisir votre clé API pour ${provider.toUpperCase()} !`);
+                return;
+            }
+
+            spinner.classList.remove('hidden');
+
+            try {
+                let data = null;
+
+                if (provider === 'demo') {
+                    await new Promise(r => setTimeout(r, 400));
+                    data = JSON.parse(JSON.stringify(demoDatabase[currentMode]));
+                    data.titre = promptInput;
+                } else {
+                    const systemPrompt = (currentMode === 'seance')
+                        ? `Tu es conseiller pédagogique EPS. Génère un JSON STRICT rédigé en français pour une SÉANCE EPS cycle 3 :
+                        {
+                            "titre": "string",
+                            "niveau": "CM1, CM2, 6ème ou Cycle 3",
+                            "apsa": "string",
+                            "seanceInfo": "string",
+                            "ca": "CA1, CA2, CA3 ou CA4",
+                            "echauffement": "string",
+                            "situationMain": "string",
+                            "differenciation": "string",
+                            "materiel": "matériel nécessaire et points de vigilance sécurité",
+                            "bilan": "string",
+                            "svg": "<svg viewBox='0 0 500 200' class='w-full max-h-52 mx-auto border rounded bg-amber-50'>...</svg>"
+                        }`
+                        : `Tu es conseiller pédagogique EPS. Génère un JSON STRICT rédigé en français pour une GRILLE D'ÉVALUATION EPS CYCLE 3 :
+                        {
+                            "titre": "string",
+                            "niveau": "CM1, CM2, 6ème ou Cycle 3",
+                            "apsa": "string",
+                            "seanceInfo": "string",
+                            "ca": "CA1, CA2, CA3 ou CA4",
+                            "critereMoteur": "string",
+                            "critereTactique": "string",
+                            "critereSocial": "string",
+                            "niv1": "string", "niv2": "string", "niv3": "string", "niv4": "string"
+                        }`;
+
+                    let url = "";
+                    let headers = { "Content-Type": "application/json" };
+                    let body = {};
+
+                    if (provider === 'gemini') {
+                        const modele = getValue('geminiModel') || "gemini-3.5-flash";
+                        // En-tête x-goog-api-key : seule méthode compatible avec les nouvelles
+                        // clés "AQ...." (Authorization key). Le paramètre ?key= (legacy AIzaSy)
+                        // ne fonctionne plus pour ce format — voir INTEGRATION-EPS.md.
+                        url = `https://generativelanguage.googleapis.com/v1beta/models/${modele}:generateContent`;
+                        headers["x-goog-api-key"] = apiKey;
+                        body = {
+                            contents: [{ parts: [{ text: systemPrompt + "\n\nDemande de l'enseignant : " + promptInput }] }],
+                            generationConfig: { responseMimeType: "application/json" }
+                        };
+                    } else if (provider === 'openrouter') {
+                        let modele = getValue('openrouterModel');
+                        if (modele === 'custom') modele = getValue('customOpenrouterModel').trim() || "google/gemini-2.0-flash-lite-001:free";
+                        url = "https://openrouter.ai/api/v1/chat/completions";
+                        headers["Authorization"] = `Bearer ${apiKey}`;
+                        headers["HTTP-Referer"] = window.location.href;
+                        headers["X-Title"] = "Générateur EPS";
+                        body = { model: modele, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptInput }] };
+                    } else if (provider === 'openai') {
+                        url = "https://api.openai.com/v1/chat/completions";
+                        headers["Authorization"] = `Bearer ${apiKey}`;
+                        body = {
+                            model: "gpt-4o-mini",
+                            response_format: { type: "json_object" },
+                            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptInput }]
+                        };
+                    } else if (provider === 'mistral') {
+                        url = "https://api.mistral.ai/v1/chat/completions";
+                        headers["Authorization"] = `Bearer ${apiKey}`;
+                        body = {
+                            model: "mistral-small-latest",
+                            response_format: { type: "json_object" },
+                            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptInput }]
+                        };
+                    } else if (provider === 'deepseek') {
+                        url = "https://api.deepseek.com/chat/completions";
+                        headers["Authorization"] = `Bearer ${apiKey}`;
+                        body = {
+                            model: "deepseek-chat",
+                            response_format: { type: "json_object" },
+                            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptInput }]
+                        };
+                    } else if (provider === 'anthropic') {
+                        url = "https://api.anthropic.com/v1/messages";
+                        headers["x-api-key"] = apiKey;
+                        headers["anthropic-version"] = "2023-06-01";
+                        headers["anthropic-dangerous-direct-browser-access"] = "true";
+                        body = {
+                            model: "claude-haiku-4-5-20251001",
+                            max_tokens: 2048,
+                            system: systemPrompt,
+                            messages: [{ role: "user", content: promptInput }]
+                        };
+                    } else if (provider === 'ollama') {
+                        // Moteur local : aucune donnée ne sort du poste (cf. Etude-IA-Transversale).
+                        url = "http://localhost:11434/v1/chat/completions";
+                        body = {
+                            model: getValue('customOpenrouterModel').trim() || "llama3.1",
+                            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: promptInput }]
+                        };
+                    }
+
+                    let response = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
+
+                    // Repli automatique sur un endpoint Gemini stable si le modèle choisi n'existe plus.
+                    if (provider === 'gemini' && response.status === 404) {
+                        const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`;
+                        response = await fetch(fallbackUrl, { method: "POST", headers, body: JSON.stringify(body) });
+                    }
+
+                    const resJson = await response.json();
+
+                    if (resJson.error) {
+                        const errMessage = typeof resJson.error === 'string' ? resJson.error : (resJson.error.message || JSON.stringify(resJson.error));
+                        throw new Error(`API ${provider.toUpperCase()} : ${errMessage}`);
+                    }
+
+                    let rawContent = "";
+                    if (provider === 'gemini') {
+                        if (!resJson.candidates || !resJson.candidates[0] || !resJson.candidates[0].content) {
+                            throw new Error("Réponse Google Gemini vide ou bloquée.");
+                        }
+                        rawContent = resJson.candidates[0].content.parts[0].text;
+                    } else if (provider === 'anthropic') {
+                        if (!resJson.content || !resJson.content[0]) throw new Error("Réponse Anthropic vide.");
+                        rawContent = resJson.content[0].text;
+                    } else {
+                        if (!resJson.choices || !resJson.choices[0] || !resJson.choices[0].message) {
+                            throw new Error(`Aucune réponse reçue de ${provider.toUpperCase()}. Vérifiez vos crédits ou le modèle.`);
+                        }
+                        rawContent = resJson.choices[0].message.content;
+                    }
+
+                    data = safeParseJSON(rawContent);
+                }
+
+                // Remplissage sécurisé du formulaire
+                setValue('titre', data.titre || '');
+                setValue('niveau', data.niveau || 'CM2');
+                setValue('apsa', data.apsa || '');
+                setValue('seanceInfo', data.seanceInfo || '');
+                setValue('caSelect', data.ca || 'CA4');
+                updateSpecificCompetencies();
+
+                if (currentMode === 'seance') {
+                    setValue('echauffement', data.echauffement || '');
+                    setValue('situationMain', data.situationMain || '');
+                    setValue('schemaSvgCode', data.svg || '');
+                    setValue('differenciation', data.differenciation || '');
+                    setValue('materiel', data.materiel || '');
+                    setValue('bilan', data.bilan || '');
+                } else {
+                    setValue('critereMoteur', data.critereMoteur || '');
+                    setValue('critereTactique', data.critereTactique || '');
+                    setValue('critereSocial', data.critereSocial || '');
+                    setValue('niv1', data.niv1 || '');
+                    setValue('niv2', data.niv2 || '');
+                    setValue('niv3', data.niv3 || '');
+                    setValue('niv4', data.niv4 || '');
+                }
+
+                sauvegardeBrouillon();
+                generateSheet(true);
+
+            } catch (err) {
+                alert("Erreur de génération : " + err.message);
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // =====================================================================
+        // 8. RENDU DU DOCUMENT
+        // =====================================================================
+        function generateSheet(archiver) {
+            const titre = escapeHtml(getValue('titre') || 'EPS Cycle 3');
+            const niveau = escapeHtml(getValue('niveau'));
+            const apsa = escapeHtml(getValue('apsa') || 'EPS');
+            const seanceInfo = escapeHtml(getValue('seanceInfo'));
+            const caEl = document.getElementById('caSelect');
+            const caText = escapeHtml(caEl ? caEl.options[caEl.selectedIndex].text : '');
+            const competences = Array.from(document.querySelectorAll('input[name="compSpec"]:checked'))
+                .map(c => `<li>${escapeHtml(c.value)}</li>`).join('');
+
+            let outputHTML = "";
+
+            if (currentMode === 'seance') {
+                const echauffement = getFormattedText('echauffement');
+                const situationMain = getFormattedText('situationMain');
+                const schemaSvgCode = getValue('schemaSvgCode'); // SVG volontairement brut
+                const differenciation = getFormattedText('differenciation');
+                const materiel = getFormattedText('materiel');
+                const bilan = getFormattedText('bilan');
+
+                outputHTML = `
+                    <div class="card-print border-b-2 border-blue-800 pb-3 mb-4 flex justify-between items-start">
+                        <div>
+                            <span class="bg-blue-800 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">${niveau}</span>
+                            <h1 class="text-xl font-bold text-gray-900 mt-1">${titre}</h1>
+                            <p class="text-gray-700 text-sm font-semibold">APSA : ${apsa}${classe.nom ? ' — Classe : ' + escapeHtml(classe.nom) : ''}</p>
+                        </div>
+                        <div class="text-right"><span class="text-xs font-bold text-gray-500">${seanceInfo}</span></div>
+                    </div>
+                    <div class="card-print bg-blue-50 border-l-4 border-blue-600 p-2.5 mb-4 rounded-r">
+                        <p class="font-bold text-blue-900 text-xs">${caText}</p>
+                        ${competences ? `<ul class="list-disc ml-5 mt-1 text-[11px] text-blue-900">${competences}</ul>` : ''}
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="card-print border rounded p-3"><h2 class="font-bold text-blue-800 text-xs uppercase mb-1">1. Échauffement</h2><div class="text-xs">${echauffement}</div></div>
+                        <div class="card-print border rounded p-3 bg-blue-50/20"><h2 class="font-bold text-blue-800 text-xs uppercase mb-1">2. Situation Principale</h2><div class="text-xs">${situationMain}</div></div>
+                        ${schemaSvgCode ? `<div class="card-print border rounded p-3"><h2 class="font-bold text-indigo-900 text-xs uppercase mb-1">Schéma Explicatif</h2><div class="flex justify-center">${schemaSvgCode}</div></div>` : ''}
+                        <div class="card-print border rounded p-3 bg-amber-50/30"><h2 class="font-bold text-amber-800 text-xs uppercase mb-1">3. Adaptations / Différenciation</h2><div class="text-xs">${differenciation}</div></div>
+                        ${materiel ? `<div class="card-print border rounded p-3 bg-red-50/30"><h2 class="font-bold text-red-800 text-xs uppercase mb-1">4. Matériel &amp; Sécurité</h2><div class="text-xs">${materiel}</div></div>` : ''}
+                        <div class="card-print border rounded p-3"><h2 class="font-bold text-gray-700 text-xs uppercase mb-1">5. Bilan &amp; Critères de réussite</h2><div class="text-xs">${bilan}</div></div>
+                    </div>
+                `;
+            } else {
+                const critM = getFormattedText('critereMoteur');
+                const critT = getFormattedText('critereTactique');
+                const critS = getFormattedText('critereSocial');
+                const n1 = getFormattedText('niv1');
+                const n2 = getFormattedText('niv2');
+                const n3 = getFormattedText('niv3');
+                const n4 = getFormattedText('niv4');
+
+                const eleves = listeElevesGrille();
+                const optionsHTML = (sel) => [0, 1, 2, 3, 4].map(v =>
+                    `<option value="${v}"${String(sel || 0) === String(v) ? ' selected' : ''}>${v === 0 ? '- Non évalué -' : NIVEAUX_LIB[v]}</option>`
+                ).join('');
+
+                const pupilRows = eleves.map((el, i) => {
+                    const s = scores[el.id] || {};
+                    return `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-1.5 border font-medium text-xs">
+                                <span class="text-gray-400 mr-1">${i + 1}.</span>${escapeHtml(el.prenom)} ${escapeHtml(el.nom || '')}
+                                ${el.niveau ? `<span class="text-[9px] text-gray-500 ml-1">(${escapeHtml(el.niveau)})</span>` : ''}
+                            </td>
+                            <td class="p-1 border"><select id="tech_${el.id}" onchange="calcPupilScore('${el.id}')" class="w-full bg-transparent text-xs p-1">${optionsHTML(s.tech)}</select></td>
+                            <td class="p-1 border"><select id="tact_${el.id}" onchange="calcPupilScore('${el.id}')" class="w-full bg-transparent text-xs p-1">${optionsHTML(s.tact)}</select></td>
+                            <td class="p-1 border"><select id="role_${el.id}" onchange="calcPupilScore('${el.id}')" class="w-full bg-transparent text-xs p-1">${optionsHTML(s.role)}</select></td>
+                            <td class="p-1.5 border font-bold text-center" id="global_${el.id}"><span class="text-gray-400 font-normal text-xs">-</span></td>
+                        </tr>`;
+                }).join('');
+
+                outputHTML = `
+                    <div class="card-print border-b-2 border-purple-800 pb-3 mb-4 flex justify-between items-start">
+                        <div>
+                            <span class="bg-purple-800 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">GRILLE D'ÉVALUATION - ${niveau}</span>
+                            <h1 class="text-xl font-bold text-gray-900 mt-1">${titre}</h1>
+                            <p class="text-gray-700 text-sm font-semibold">APSA : ${apsa}${classe.nom ? ' — Classe : ' + escapeHtml(classe.nom) : ''}</p>
+                        </div>
+                        <div class="text-right"><span class="text-xs font-bold text-gray-500">${seanceInfo}</span></div>
+                    </div>
+
+                    <div class="card-print bg-purple-50 border-l-4 border-purple-600 p-2.5 mb-4 rounded-r">
+                        <p class="font-bold text-purple-900 text-xs">${caText}</p>
+                        ${competences ? `<ul class="list-disc ml-5 mt-1 text-[11px] text-purple-900">${competences}</ul>` : ''}
+                    </div>
+
+                    <div class="card-print border rounded p-3 mb-4 bg-gray-50">
+                        <h2 class="font-bold text-gray-800 text-xs uppercase border-b pb-1 mb-2">Critères d'Évaluation Observables</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div><strong class="text-purple-900">1. Motricité / Technique :</strong><p class="mt-1">${critM}</p></div>
+                            <div><strong class="text-purple-900">2. Choix Tactiques :</strong><p class="mt-1">${critT}</p></div>
+                            <div><strong class="text-purple-900">3. Rôles Sociaux :</strong><p class="mt-1">${critS}</p></div>
+                        </div>
+                    </div>
+
+                    <div class="card-print border rounded p-3 mb-4">
+                        <h2 class="font-bold text-gray-800 text-xs uppercase border-b pb-2 mb-2">Échelle de Maîtrise des Compétences</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-xs">
+                            <div class="p-2 bg-red-50 border border-red-200 rounded"><span class="font-bold text-red-800 block mb-1">Insuffisant (Niveau 1)</span><p class="text-gray-700">${n1}</p></div>
+                            <div class="p-2 bg-orange-50 border border-orange-200 rounded"><span class="font-bold text-orange-800 block mb-1">Fragile (Niveau 2)</span><p class="text-gray-700">${n2}</p></div>
+                            <div class="p-2 bg-green-50 border border-green-200 rounded"><span class="font-bold text-green-800 block mb-1">Satisfaisant (Niveau 3)</span><p class="text-gray-700">${n3}</p></div>
+                            <div class="p-2 bg-emerald-50 border border-emerald-300 rounded"><span class="font-bold text-emerald-900 block mb-1">Expert (Niveau 4)</span><p class="text-gray-700">${n4}</p></div>
+                        </div>
+                    </div>
+
+                    <!-- SYNTHÈSE DE CLASSE -->
+                    <div class="card-print border rounded p-3 mb-4 bg-slate-50">
+                        <h2 class="font-bold text-gray-800 text-xs uppercase border-b pb-1 mb-2">Synthèse de la classe</h2>
+                        <div id="syntheseClasse" class="text-xs"></div>
+                    </div>
+
+                    <!-- RELEVÉ DE CLASSE -->
+                    <div class="card-print border rounded p-3">
+                        <div class="flex justify-between items-center border-b pb-2 mb-2">
+                            <h2 class="font-bold text-gray-800 text-xs uppercase">Feuille de relevé — ${eleves.length} élèves${classe.eleves.length ? '' : ' (liste générique)'}</h2>
+                            <span class="text-xs text-purple-700 font-semibold no-print">⚡ Saisie automatiquement sauvegardée.</span>
+                        </div>
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 border-b">
+                                    <th class="p-2 border w-1/4">Élève</th>
+                                    <th class="p-2 border w-1/5">1. Technique</th>
+                                    <th class="p-2 border w-1/5">2. Tactique</th>
+                                    <th class="p-2 border w-1/5">3. Rôle / Arbitrage</th>
+                                    <th class="p-2 border text-center font-bold text-purple-900">Niveau Global</th>
+                                </tr>
+                            </thead>
+                            <tbody>${pupilRows}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('output').innerHTML = outputHTML;
+
+            // Ré-applique les pastilles de niveau global après reconstruction du tableau.
+            if (currentMode === 'eval') {
+                listeElevesGrille().forEach(el => { if (scores[el.id]) calcPupilScore(el.id); });
+                majSynthese();
+            }
+
+            if (archiver) archiverDocument();
+            document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // =====================================================================
+        // 9. INITIALISATION
+        // =====================================================================
+        window.onload = function () {
+            loadIaConfig();
+            loadIntegration();
+            loadClasse();
+            chargerHistorique();
+            const restaure = chargerBrouillon();
+
+            toggleApiKeyInput();
+            switchMode(currentMode);
+            if (!document.querySelectorAll('#specificCompetencies input').length) updateSpecificCompetencies();
+
+            // Autosave sur toute saisie du formulaire.
+            document.querySelectorAll('#epsForm input, #epsForm textarea, #epsForm select, #aiPrompt')
+                .forEach(el => {
+                    el.addEventListener('input', planifierSauvegarde);
+                    el.addEventListener('change', planifierSauvegarde);
+                });
+
+            if (restaure && getValue('titre')) generateSheet(false);
+        };
+
+        window.addEventListener('beforeunload', sauvegardeBrouillon);
+    </script>
+</body>
+</html>

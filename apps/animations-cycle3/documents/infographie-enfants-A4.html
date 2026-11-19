@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon Guide de l'Exposé — Pour les élèves (A4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu: #205493;
+    --bleu-ciel: #EBF2FA;
+    --bleu-vif: #0066CC;
+    --jaune: #FFD13B;
+    --jaune-clair: #FFF9E5;
+    --vert: #1B8A5A;
+    --vert-clair: #E8F5EE;
+    --orange: #E66526;
+    --orange-clair: #FDF1EA;
+    --violet: #6E40C9;
+    --violet-clair: #F3EEFC;
+    --fond: #F4F7FC;
+    --blanc: #FFFFFF;
+    --texte: #162033;
+    --texte-doux: #4A5568;
+    --ligne: #D9E2EC;
+    --ombre: 0 4px 14px rgba(22, 32, 51, 0.07);
+  }
+
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; padding: 0; background: #64748B; font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif; color: var(--texte); }
+
+  /* Barre d'action à l'écran */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #0F172A; color: white; padding: 12px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .toolbar h1 { margin: 0; font-size: 16px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif; display: flex; align-items: center; gap: 8px; }
+  .btn-print {
+    background: #FFD13B; color: #0F172A; border: none; font-weight: 800; font-size: 14px;
+    padding: 8px 18px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .btn-print:hover { background: #FFE071; transform: scale(1.03); }
+
+  /* Page A4 stricte */
+  .page-wrap {
+    display: flex; justify-content: center; padding: 24px 0 40px;
+  }
+  .page-a4 {
+    width: 210mm; height: 297mm; max-height: 297mm;
+    background: var(--blanc);
+    position: relative;
+    padding: 10mm 12mm 8mm 12mm;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  @media print {
+    .toolbar { display: none !important; }
+    .page-wrap { padding: 0 !important; }
+    .page-a4 {
+      width: 210mm !important; height: 297mm !important; max-height: 297mm !important;
+      box-shadow: none !important; margin: 0 !important; border-radius: 0 !important;
+      padding: 9mm 11mm 7mm 11mm !important;
+    }
+    @page { size: A4 portrait; margin: 0; }
+  }
+
+  /* En-tête */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #1A4685 0%, #2A68C2 100%);
+    border-radius: 16px; padding: 12px 18px; color: white;
+    position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ''; position: absolute; right: -20px; top: -20px;
+    width: 120px; height: 120px; background: rgba(255,255,255,0.08); border-radius: 50%;
+  }
+  .header-titles { flex: 1; }
+  .badge-cycle {
+    display: inline-block; background: var(--jaune); color: #0F172A;
+    font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 10px; border-radius: 999px; margin-bottom: 4px;
+  }
+  .header-titles h1 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 24px; font-weight: 800; line-height: 1.15; letter-spacing: -0.01em;
+  }
+  .header-titles p {
+    margin: 4px 0 0; font-size: 12.5px; opacity: 0.92; font-weight: 500;
+  }
+  .mascotte-bubble {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mascotte-bubble .chouette {
+    width: 52px; height: 52px; flex-shrink: 0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  }
+
+  /* Bandeau règle d'or */
+  .regle-or {
+    margin-top: 7px;
+    background: var(--jaune-clair); border: 2px dashed #E0BA36;
+    border-radius: 12px; padding: 7px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .regle-or .etoile { font-size: 22px; flex-shrink: 0; }
+  .regle-or p { margin: 0; font-size: 12px; line-height: 1.35; font-weight: 600; color: #6D4C00; }
+  .regle-or b { color: #0F172A; font-weight: 800; }
+
+  /* 3 Étapes du voyage */
+  .titre-section {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 800;
+    color: var(--bleu); text-transform: uppercase; letter-spacing: 0.05em;
+    margin: 8px 0 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .titre-section::after { content: ''; flex: 1; height: 2px; background: #E2E8F0; }
+
+  .etapes-grid {
+    display: grid; grid-template-columns: 1fr 1.08fr 1fr; gap: 8px;
+  }
+  .etape-card {
+    border-radius: 14px; padding: 10px 11px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; border: 1.5px solid;
+  }
+  .etape-1 { background: #F8FAFD; border-color: #BFDBFE; }
+  .etape-2 { background: #FAF5FF; border-color: #E9D5FF; }
+  .etape-3 { background: #F0FDF4; border-color: #BBF7D0; }
+
+  .etape-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; color: white; margin-bottom: 6px;
+  }
+  .etape-1 .etape-num { background: var(--bleu-vif); }
+  .etape-2 .etape-num { background: var(--violet); }
+  .etape-3 .etape-num { background: var(--vert); }
+
+  .etape-titre {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 15px; font-weight: 800;
+    line-height: 1.2; margin: 0 0 4px;
+  }
+  .etape-1 .etape-titre { color: var(--bleu-vif); }
+  .etape-2 .etape-titre { color: var(--violet); }
+  .etape-3 .etape-titre { color: var(--vert); }
+
+  .etape-desc {
+    font-size: 11px; line-height: 1.35; color: var(--texte-doux); margin: 0 0 6px; font-weight: 500;
+  }
+  .etape-points {
+    margin: 0; padding: 0; list-style: none; font-size: 11px; line-height: 1.35;
+  }
+  .etape-points li {
+    position: relative; padding-left: 14px; margin-bottom: 4px; font-weight: 600; color: #2D3748;
+  }
+  .etape-points li::before {
+    content: '➔'; position: absolute; left: 0; font-size: 9px; opacity: 0.6;
+  }
+
+  /* Boîtes à outils et Astuces */
+  .grille-outils {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;
+  }
+  .outil-box {
+    border-radius: 13px; padding: 9px 12px; border: 1.5px solid var(--ligne);
+    background: var(--blanc);
+  }
+  .outil-box.box-couleurs { background: #FFFDF7; border-color: #F6E09E; }
+  .outil-box.box-antiplagiat { background: #F8FAFD; border-color: #CCE0FF; }
+
+  .outil-entete {
+    display: flex; align-items: center; gap: 7px; margin-bottom: 6px;
+  }
+  .outil-entete .ico { font-size: 18px; }
+  .outil-entete h3 { margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: #1E293B; }
+
+  /* Les 3 couleurs */
+  .triade-couleurs {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .item-coul {
+    display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600;
+  }
+  .pastille-c {
+    width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15);
+  }
+  .c-jaune { background: #FFE36E; }
+  .c-vert { background: #A3E6B6; }
+  .c-bleu { background: #AFD6FF; }
+
+  /* Les 4 super-pouvoirs du Grand Oral */
+  .oral-card {
+    background: linear-gradient(135deg, #102A43 0%, #1A365D 100%);
+    border-radius: 14px; padding: 9px 14px; color: white; margin-top: 7px;
+  }
+  .oral-card-top {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+  }
+  .oral-card-top h3 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 13.5px;
+    font-weight: 800; color: #FFD13B; display: flex; align-items: center; gap: 6px;
+  }
+  .oral-card-top span { font-size: 10.5px; opacity: 0.8; font-weight: 600; }
+  .oral-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  }
+  .oral-item {
+    background: rgba(255,255,255,0.08); border-radius: 9px; padding: 7px 6px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .oral-item .emoji { font-size: 18px; margin-bottom: 2px; }
+  .oral-item b { display: block; font-size: 10.5px; font-weight: 700; color: #FFF; margin-bottom: 2px; }
+  .oral-item p { margin: 0; font-size: 9.5px; line-height: 1.25; opacity: 0.85; }
+
+  /* Check-list finale à cocher */
+  .checklist-wrap {
+    background: #F1F5F9; border-radius: 12px; padding: 7px 12px; margin-top: 6px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .checklist-title {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 11.5px; font-weight: 800; color: #0F172A;
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  }
+  .check-items {
+    display: flex; gap: 10px; flex-wrap: wrap; flex: 1; justify-content: flex-end;
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; color: #334155;
+  }
+  .check-box {
+    width: 13px; height: 13px; border: 1.5px solid #64748B; border-radius: 3px; background: white;
+  }
+
+  /* Pied de page */
+  .footer {
+    border-top: 1px solid var(--ligne); padding-top: 5px; margin-top: 5px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9.5px; color: #64748B; font-weight: 600;
+  }
+  .footer-links { display: flex; gap: 12px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1><span>🦉</span> Atelier Exposés · Fiche Élève (A4)</h1>
+  <button class="btn-print" onclick="window.print()">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+    Imprimer en A4 / Enregistrer en PDF
+  </button>
+</div>
+
+<div class="page-wrap">
+  <div class="page-a4">
+
+    <!-- En-tête illustré -->
+    <div class="header">
+      <div class="header-titles">
+        <span class="badge-cycle">Cycle 3 · CM1-CM2</span>
+        <h1>La Fabrique de mon Exposé !</h1>
+        <p>Le pas-à-pas pour chercher, comprendre et raconter une histoire passionnante à la classe.</p>
+      </div>
+      <div class="mascotte-bubble">
+        <!-- Chouette SVG mascotte -->
+        <svg class="chouette" viewBox="0 0 46 46" aria-hidden="true">
+          <circle cx="23" cy="25" r="19" fill="#FFD13B"/>
+          <circle cx="16" cy="21" r="7" fill="#fff"/>
+          <circle cx="30" cy="21" r="7" fill="#fff"/>
+          <circle cx="17" cy="22" r="3.2" fill="#1F2633"/>
+          <circle cx="29" cy="22" r="3.2" fill="#1F2633"/>
+          <path d="M19 31 Q23 35 27 31" stroke="#E66526" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M8 10 L15 15 M38 10 L31 15" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Règle d'or -->
+    <div class="regle-or">
+      <span class="etoile">🌟</span>
+      <p><b>Le secret d'un exposé réussi :</b> Ne récite pas un livre par cœur ! Imagine que tu racontes une découverte passionnante à un copain pendant la récréation.</p>
+    </div>
+
+    <!-- Titre section parcours -->
+    <div class="titre-section">
+      <span>🚀 Mon parcours en 3 missions dans l'Atelier</span>
+    </div>
+
+    <!-- Les 3 étapes -->
+    <div class="etapes-grid">
+      <!-- Étape 1 -->
+      <div class="etape-card etape-1">
+        <div>
+          <div class="etape-num">1</div>
+          <h2 class="etape-titre">Mon Sujet & Mes Questions</h2>
+          <p class="etape-desc">Tes questions <b>sont</b> ton plan. Il n'y a rien d'autre à inventer !</p>
+          <ul class="etape-points">
+            <li>Choisis ton sujet dans l'Atelier (Histoire, Géo, Sciences).</li>
+            <li>Garde <b>2 à 3 questions clés</b> (ex. : <i>À quoi ça sert ? Comment ça marche ?</i>).</li>
+            <li>Repère le badge <b>▶ Animation</b> si une vidéo animée existe !</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div class="etape-card etape-2">
+        <div>
+          <div class="etape-num">2</div>
+          <h2 class="etape-titre">Je Cherche & Je Garde</h2>
+          <p class="etape-desc">Deviens un enquêteur malin dans les sites sûrs et les animations.</p>
+          <ul class="etape-points">
+            <li><b>Sites sûrs :</b> Vikidia, Lumni, 1jour1actu.</li>
+            <li><b>⭐ Je garde :</b> surligne une phrase pépite et clique pour la mettre dans ton panier.</li>
+            <li><b>📷 Photo schéma :</b> appuie sur la touche <kbd>C</kbd> ou 📷 dans les animations pour capturer l'image !</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div class="etape-card etape-3">
+        <div>
+          <div class="etape-num">3</div>
+          <h2 class="etape-titre">J'Écris & Je Présente</h2>
+          <p class="etape-desc">Écris avec tes propres mots. Les diapos se font toutes seules !</p>
+          <ul class="etape-points">
+            <li><b>Amorces de phrases :</b> <i>« D'abord... »</i>, <i>« On observe que... »</i> pour t'aider.</li>
+            <li><b>🎙️ Entraînement micro :</b> enregistre-toi et réécoute ta voix avant le jour J.</li>
+            <li><b>🖥️ Au tableau :</b> lance le plein écran avec le minuteur TNI.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Titre Boîte à outils -->
+    <div class="titre-section">
+      <span>🧰 Ma boîte à super-pouvoirs</span>
+    </div>
+
+    <!-- Boîtes astuces -->
+    <div class="grille-outils">
+      <!-- La règle des 3 couleurs -->
+      <div class="outil-box box-couleurs">
+        <div class="outil-entete">
+          <span class="ico">🎨</span>
+          <h3>Le code des 3 surligneurs</h3>
+        </div>
+        <div class="triade-couleurs">
+          <div class="item-coul">
+            <span class="pastille-c c-jaune"></span>
+            <span><b>Jaune :</b> L'idée principale (ce qu'il faut absolument retenir)</span>
+          </div>
+          <div class="item-coul">
+            <span class="pastille-c c-vert"></span>
+            <span><b>Vert :</b> Une date, un lieu ou un chiffre important</span>
+          </div>
+          <div class="item-coul">
+            <span class="pastille-c c-bleu"></span>
+            <span><b>Bleu :</b> Le mot savant à expliquer à la classe</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- L'anti-copier-coller -->
+      <div class="outil-box box-antiplagiat">
+        <div class="outil-entete">
+          <span class="ico">🛡️</span>
+          <h3>Le radar Anti-Copier-Coller</h3>
+        </div>
+        <p style="margin: 0; font-size: 11px; line-height: 1.35; color: var(--texte-doux);">
+          Si tu recopies une phrase mot pour mot d'un site, l'Atelier te prévient en orange.
+          <br><b>Ton défi :</b> lis la phrase, ferme les yeux, et réécris-la avec <b>tes propres mots</b> !
+        </p>
+      </div>
+    </div>
+
+    <!-- Le Grand Oral : 4 conseils en or -->
+    <div class="oral-card">
+      <div class="oral-card-top">
+        <h3><span>🎤</span> Le Jour J : Mes 4 super-pouvoirs devant la classe</h3>
+        <span>3 à 5 minutes chrono !</span>
+      </div>
+      <div class="oral-grid">
+        <div class="oral-item">
+          <div class="emoji">🦁</div>
+          <b>1. Voix forte</b>
+          <p>Parle assez fort pour que le fond de la classe t'entende bien.</p>
+        </div>
+        <div class="oral-item">
+          <div class="emoji">🐢</div>
+          <b>2. Rythme calme</b>
+          <p>Respire, ne cours pas. Fais une petite pause entre chaque diapo.</p>
+        </div>
+        <div class="oral-item">
+          <div class="emoji">👀</div>
+          <b>3. Regard fier</b>
+          <p>Regarde les copains dans les yeux, ne tourne pas le dos à l'écran !</p>
+        </div>
+        <div class="oral-item">
+          <div class="emoji">💡</div>
+          <b>4. Raconteur</b>
+          <p>Explique les images et l'animation avec tes mots personnels.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check-list du jour J -->
+    <div class="checklist-wrap">
+      <div class="checklist-title">
+        <span>✅</span> Avant de passer au tableau :
+      </div>
+      <div class="check-items">
+        <div class="check-item"><span class="check-box"></span> J'ai testé mon oral au micro 🎙️</div>
+        <div class="check-item"><span class="check-box"></span> J'ai imprimé ma fiche mémo 🖨️</div>
+        <div class="check-item"><span class="check-box"></span> J'ai distribué les coupons aux camarades 📋</div>
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+      <div><b>Atelier Exposés & Motion Design Cycle 3</b> · École élémentaire</div>
+      <div class="footer-links">
+        <span>Application autonome</span> · <span>Recherche sécurisée Staan / Qwant Jr</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

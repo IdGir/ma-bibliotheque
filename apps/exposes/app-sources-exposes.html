@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes sources d'exposé — Cycle 3</title>
+<style>
+  :root{
+    --bleu:#2563eb; --bleu-clair:#dbeafe; --bleu-fonce:#1e3a8a;
+    --vert:#16a34a; --vert-clair:#dcfce7;
+    --orange:#ea580c; --orange-clair:#ffedd5;
+    --rouge:#dc2626; --rouge-clair:#fee2e2;
+    --gris:#64748b; --gris-clair:#f1f5f9; --bord:#cbd5e1;
+    --texte:#0f172a; --fond:#f8fafc;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Segoe UI",Verdana,system-ui,sans-serif;
+    background:var(--fond); color:var(--texte); font-size:17px; line-height:1.55;
+  }
+  header{
+    background:var(--bleu); color:#fff; padding:14px 20px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  header h1{font-size:1.25rem; margin:0; flex:1}
+  .onglets{display:flex; gap:8px}
+  .onglets button{
+    background:rgba(255,255,255,.15); color:#fff; border:2px solid transparent;
+    padding:8px 16px; border-radius:99px; font-size:1rem; cursor:pointer; font-weight:600;
+  }
+  .onglets button.actif{background:#fff; color:var(--bleu-fonce)}
+  main{max-width:1000px; margin:0 auto; padding:22px 18px 80px}
+  .vue{display:none}
+  .vue.actif{display:block}
+  h2{font-size:1.4rem; margin:0 0 6px}
+  .sous{color:var(--gris); margin:0 0 20px}
+  .carte{
+    background:#fff; border:1px solid var(--bord); border-radius:var(--radius);
+    padding:18px; margin-bottom:16px;
+  }
+  .recherche{display:flex; gap:10px; flex-wrap:wrap}
+  .recherche input{
+    flex:1; min-width:220px; padding:14px 16px; font-size:1.1rem;
+    border:2px solid var(--bord); border-radius:var(--radius); font-family:inherit;
+  }
+  .recherche input:focus{outline:none; border-color:var(--bleu)}
+  button.principal{
+    background:var(--bleu); color:#fff; border:none; padding:14px 22px;
+    font-size:1.05rem; font-weight:700; border-radius:var(--radius); cursor:pointer;
+  }
+  button.principal:hover{background:var(--bleu-fonce)}
+  button.secondaire{
+    background:#fff; color:var(--bleu-fonce); border:2px solid var(--bord);
+    padding:10px 16px; font-size:.95rem; font-weight:600; border-radius:10px; cursor:pointer;
+  }
+  button.secondaire:hover{border-color:var(--bleu)}
+  .puces{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+  .puce{
+    background:var(--bleu-clair); color:var(--bleu-fonce); border:none;
+    padding:7px 14px; border-radius:99px; cursor:pointer; font-size:.9rem; font-weight:600;
+    font-family:inherit;
+  }
+  .puce:hover{background:#bfdbfe}
+  .source{
+    border:1px solid var(--bord); border-left:6px solid var(--gris);
+    border-radius:12px; padding:14px 16px; margin-bottom:12px; background:#fff;
+  }
+  .source.n5{border-left-color:var(--vert)}
+  .source.n4{border-left-color:#65a30d}
+  .source.n3{border-left-color:var(--orange)}
+  .source.n2,.source.n1{border-left-color:var(--rouge)}
+  .source h3{margin:0 0 4px; font-size:1.08rem}
+  .source h3 a{color:var(--bleu-fonce)}
+  .ligne-meta{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:6px}
+  .etiquette{
+    font-size:.78rem; font-weight:700; padding:3px 10px; border-radius:99px;
+    background:var(--gris-clair); color:var(--gris);
+  }
+  .score{font-weight:700; font-size:.85rem; padding:3px 10px; border-radius:99px}
+  .score.n5{background:var(--vert-clair); color:#14532d}
+  .score.n4{background:#ecfccb; color:#3f6212}
+  .score.n3{background:var(--orange-clair); color:#7c2d12}
+  .score.n2,.score.n1{background:var(--rouge-clair); color:#7f1d1d}
+  .resume{margin:6px 0; font-size:.97rem}
+  .justif{font-size:.87rem; color:var(--gris); font-style:italic; margin:6px 0 10px}
+  .actions-source{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  label.choisir{
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    background:var(--gris-clair); padding:8px 14px; border-radius:10px; font-weight:600; font-size:.92rem;
+  }
+  label.choisir input{width:20px; height:20px; cursor:pointer}
+  label.choisir.coche{background:var(--vert-clair); color:#14532d}
+  .alerte{
+    background:var(--orange-clair); border:1px solid #fdba74; color:#7c2d12;
+    padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:.95rem;
+  }
+  .info{
+    background:var(--bleu-clair); border:1px solid #93c5fd; color:var(--bleu-fonce);
+    padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:.95rem;
+  }
+  .partie{border:1px solid var(--bord); border-radius:12px; padding:14px 16px; margin-bottom:14px; background:#fff}
+  .partie h4{margin:0 0 4px; font-size:1.05rem; color:var(--bleu-fonce)}
+  .partie .aide{font-size:.88rem; color:var(--gris); margin:0 0 8px}
+  .partie textarea{
+    width:100%; min-height:80px; padding:10px 12px; font-family:inherit; font-size:1rem;
+    border:2px solid var(--bord); border-radius:10px; resize:vertical;
+  }
+  .partie textarea:focus{outline:none; border-color:var(--bleu)}
+  .rattache{margin-top:8px; font-size:.9rem}
+  .rattache label{display:block; padding:3px 0; cursor:pointer}
+  table{width:100%; border-collapse:collapse; font-size:.92rem}
+  th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--bord); vertical-align:top}
+  th{background:var(--gris-clair); font-size:.85rem; text-transform:uppercase; letter-spacing:.03em; color:var(--gris)}
+  .reglage{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px}
+  .reglage input[type=range]{flex:1; min-width:180px}
+  .vide{text-align:center; color:var(--gris); padding:30px 10px}
+  .barre-etapes{display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap}
+  .etape{
+    flex:1; min-width:130px; padding:10px; border-radius:10px; background:#fff;
+    border:2px solid var(--bord); font-size:.9rem; font-weight:600; color:var(--gris); text-align:center;
+  }
+  .etape.actif{border-color:var(--bleu); background:var(--bleu-clair); color:var(--bleu-fonce)}
+  .etape.fait{border-color:var(--vert); background:var(--vert-clair); color:#14532d}
+  footer{text-align:center; color:var(--gris); font-size:.85rem; padding:20px}
+  @media print{
+    header,.onglets,.barre-etapes,button,.info,.alerte,footer,.aide{display:none !important}
+    body{background:#fff}
+    .partie,.carte{border:none; page-break-inside:avoid}
+    textarea{border:none; resize:none; height:auto}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Mes sources d'exposé</h1>
+  <div class="onglets">
+    <button id="ong-eleve" class="actif" onclick="allerA('eleve')">Élève</button>
+    <button id="ong-plan" onclick="allerA('plan')">Mon plan</button>
+    <button id="ong-eval" onclick="allerA('eval')">Évaluation</button>
+    <button id="ong-prof" onclick="allerA('prof')">Enseignant</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= VUE ÉLÈVE ================= -->
+  <section id="vue-eleve" class="vue actif">
+    <div class="carte" id="barre-eleve" style="padding:12px 18px"></div>
+
+    <div class="barre-etapes">
+      <div class="etape actif">1. Je choisis mon sujet</div>
+      <div class="etape">2. Je choisis mes sources</div>
+      <div class="etape">3. Je construis mon plan</div>
+    </div>
+
+    <div class="carte">
+      <h2>Quel est le sujet de ton exposé ?</h2>
+      <p class="sous">Écris ton sujet, puis clique sur « Chercher des sources ».</p>
+      <div class="recherche">
+        <input id="champ-sujet" placeholder="Exemple : les volcans" onkeydown="if(event.key==='Enter')chercher()">
+        <button class="principal" onclick="chercher()">🔍 Chercher des sources</button>
+      </div>
+      <div class="puces" id="puces-sujets"></div>
+    </div>
+
+    <div id="zone-resultats"></div>
+  </section>
+
+  <!-- ================= VUE PLAN ================= -->
+  <section id="vue-plan" class="vue">
+    <div class="carte" id="entete-plan"></div>
+    <div id="zone-plan"></div>
+  </section>
+
+  <!-- ================= VUE ÉVALUATION ================= -->
+  <section id="vue-eval" class="vue">
+    <h2>Évaluation des exposés</h2>
+    <p class="sous">Grille alignée sur les quatre niveaux de maîtrise du LSU. À remplir pendant le passage à l'oral.</p>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Ma classe</h3>
+      <div class="recherche">
+        <input id="ajout-eleve" placeholder="Prénom de l'élève" onkeydown="if(event.key==='Enter')ajouterEleve()">
+        <button class="secondaire" onclick="ajouterEleve()">Ajouter</button>
+        <button class="secondaire" onclick="importerListe()">Coller une liste</button>
+      </div>
+      <div class="puces" id="liste-eleves"></div>
+    </div>
+
+    <div id="zone-eval"></div>
+
+    <div class="carte" id="bilan-classe"></div>
+  </section>
+
+  <!-- ================= VUE ENSEIGNANT ================= -->
+  <section id="vue-prof" class="vue">
+    <h2>Espace enseignant</h2>
+    <p class="sous">Réglez le niveau d'exigence, validez ou rejetez les sources, gérez les sites autorisés.</p>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Seuil de fiabilité</h3>
+      <div class="reglage">
+        <span>Niveau minimum affiché aux élèves :</span>
+        <input type="range" id="seuil" min="1" max="5" step="1" oninput="majSeuil(this.value)">
+        <strong id="val-seuil"></strong>
+      </div>
+      <p class="sous" style="margin:0">Par défaut 3/5. À 4/5, seules les sources institutionnelles et la presse jeunesse validée apparaissent.</p>
+    </div>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Ajouter une source manuellement</h3>
+      <div class="recherche">
+        <input id="ajout-url" placeholder="Adresse du site (https://...)">
+        <input id="ajout-titre" placeholder="Titre de la source">
+        <button class="principal" onclick="ajouterSource()">Analyser et ajouter</button>
+      </div>
+      <p class="sous" style="margin:8px 0 0">Le score est calculé automatiquement à partir du domaine du site.</p>
+    </div>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Sites bloqués pour la classe</h3>
+      <div class="recherche">
+        <input id="ajout-bloc" placeholder="exemple : monsiteperso.blogspot.com">
+        <button class="secondaire" onclick="bloquerDomaine()">Bloquer ce site</button>
+      </div>
+      <div class="puces" id="liste-bloques"></div>
+    </div>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Sources vues par la classe</h3>
+      <div id="tableau-prof"></div>
+    </div>
+
+    <div class="carte">
+      <h3 style="margin-top:0">Sites de référence utilisés par l'application</h3>
+      <div id="tableau-registre"></div>
+    </div>
+
+    <div class="carte">
+      <button class="secondaire" onclick="reinitialiser()">🗑️ Effacer toutes les données enregistrées</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Application pédagogique — cycle 3. Les données sont enregistrées uniquement dans ce navigateur.
+</footer>
+
+<script>
+/* =====================================================================
+   1. REGISTRE DES SITES DE CONFIANCE
+   Chaque site porte un niveau de fiabilité (1 à 5) et une justification.
+   C'est ce registre qui sert de garde-fou : rien n'est proposé aux élèves
+   sans passer par lui.
+   ===================================================================== */
+const REGISTRE = [
+  {dom:"fr.vikidia.org", nom:"Vikidia", niv:5, type:"Encyclopédie",
+   just:"Encyclopédie écrite pour les 8-13 ans, relue par des contributeurs adultes.",
+   rech:"https://fr.vikidia.org/w/index.php?search=", mat:["histoire","sciences","geographie","arts"]},
+  {dom:"www.lumni.fr", nom:"Lumni (France Télévisions / Éducation nationale)", niv:5, type:"Vidéo",
+   just:"Plateforme éducative publique, contenus validés par des enseignants.",
+   rech:"https://www.lumni.fr/recherche?q=", mat:["histoire","sciences","geographie","arts","emc"]},
+  {dom:"www.1jour1actu.com", nom:"1 jour 1 actu", niv:5, type:"Presse jeunesse",
+   just:"Journal d'actualité écrit pour les 8-12 ans par des journalistes professionnels.",
+   rech:"https://www.1jour1actu.com/?s=", mat:["histoire","sciences","geographie","emc"]},
+  {dom:"www.radiofrance.fr", nom:"Radio France — Les Odyssées", niv:5, type:"Podcast",
+   just:"Service public de radio, série documentaire conçue pour les enfants.",
+   rech:"https://www.radiofrance.fr/recherche?term=", mat:["histoire","sciences"]},
+  {dom:"www.cite-sciences.fr", nom:"Cité des sciences et de l'industrie", niv:5, type:"Musée",
+   just:"Établissement public de culture scientifique.",
+   rech:"https://www.cite-sciences.fr/fr/recherche?q=", mat:["sciences"]},
+  {dom:"www.mnhn.fr", nom:"Muséum national d'Histoire naturelle", niv:5, type:"Musée",
+   just:"Institution scientifique publique de référence sur le vivant.",
+   rech:"https://www.mnhn.fr/fr/recherche?text=", mat:["sciences"]},
+  {dom:"cnes.fr", nom:"CNES — agence spatiale française", niv:5, type:"Organisme officiel",
+   just:"Agence spatiale nationale, informations scientifiques de première main.",
+   rech:"https://cnes.fr/recherche?keys=", mat:["sciences"]},
+  {dom:"www.esa.int", nom:"Agence spatiale européenne (ESA Kids)", niv:5, type:"Organisme officiel",
+   just:"Agence spatiale européenne, section spécialement rédigée pour les enfants.",
+   rech:"https://www.esa.int/Search?SearchText=", mat:["sciences"]},
+  {dom:"jeunes.ademe.fr", nom:"ADEME — espace jeunes", niv:5, type:"Organisme officiel",
+   just:"Agence publique de la transition écologique, rubrique pédagogique.",
+   rech:"https://jeunes.ademe.fr/?s=", mat:["sciences","geographie","emc"]},
+  {dom:"www.chateauversailles.fr", nom:"Château de Versailles", niv:5, type:"Musée",
+   just:"Établissement public, service pédagogique dédié aux scolaires.",
+   rech:"https://www.chateauversailles.fr/recherche?search_api_fulltext=", mat:["histoire","arts"]},
+  {dom:"www.louvre.fr", nom:"Musée du Louvre", niv:5, type:"Musée",
+   just:"Musée national, notices d'œuvres rédigées par des conservateurs.",
+   rech:"https://www.louvre.fr/recherche?query=", mat:["histoire","arts"]},
+  {dom:"classes.bnf.fr", nom:"BnF — Classes", niv:5, type:"Dossier pédagogique",
+   just:"Bibliothèque nationale de France, dossiers conçus pour les classes.",
+   rech:"https://classes.bnf.fr/recherche?q=", mat:["histoire","arts"]},
+  {dom:"www.monuments-nationaux.fr", nom:"Centre des monuments nationaux", niv:5, type:"Organisme officiel",
+   just:"Établissement public gérant les monuments historiques français.",
+   rech:"https://www.monuments-nationaux.fr/recherche?q=", mat:["histoire","geographie"]},
+  {dom:"www.geoportail.gouv.fr", nom:"Géoportail (IGN)", niv:5, type:"Carte",
+   just:"Portail cartographique officiel de l'État français.",
+   rech:"https://www.geoportail.gouv.fr/carte?q=", mat:["geographie"]},
+  {dom:"meteofrance.com", nom:"Météo-France", niv:5, type:"Organisme officiel",
+   just:"Service météorologique national.",
+   rech:"https://meteofrance.com/recherche?search=", mat:["sciences","geographie"]},
+  {dom:"www.fondation-lamap.org", nom:"La main à la pâte", niv:5, type:"Dossier pédagogique",
+   just:"Fondation de l'Académie des sciences, ressources scientifiques pour l'école.",
+   rech:"https://www.fondation-lamap.org/recherche?search=", mat:["sciences"]},
+  {dom:"www.reseau-canope.fr", nom:"Réseau Canopé", niv:5, type:"Dossier pédagogique",
+   just:"Opérateur public de l'Éducation nationale.",
+   rech:"https://www.reseau-canope.fr/recherche?q=", mat:["histoire","sciences","geographie","arts","emc"]},
+  {dom:"www.insee.fr", nom:"INSEE", niv:5, type:"Données chiffrées",
+   just:"Institut national de la statistique, chiffres officiels.",
+   rech:"https://www.insee.fr/fr/recherche?q=", mat:["geographie","emc"]},
+  {dom:"www.elysee.fr", nom:"Présidence de la République", niv:5, type:"Organisme officiel",
+   just:"Site officiel de l'État français.",
+   rech:"https://www.elysee.fr/recherche?query=", mat:["emc","histoire"]},
+  {dom:"fr.wikimini.org", nom:"Wikimini", niv:4, type:"Encyclopédie",
+   just:"Encyclopédie rédigée par des enfants et supervisée par des enseignants : à vérifier avec une deuxième source.",
+   rech:"https://fr.wikimini.org/w/index.php?search=", mat:["histoire","sciences","geographie","arts"]},
+  {dom:"fr.wikipedia.org", nom:"Wikipédia", niv:4, type:"Encyclopédie",
+   just:"Encyclopédie collaborative très complète, mais écrite pour des adultes : utile pour vérifier une date ou un chiffre.",
+   rech:"https://fr.wikipedia.org/w/index.php?search=", mat:["histoire","sciences","geographie","arts","emc"]},
+  {dom:"www.nationalgeographic.fr", nom:"National Geographic", niv:4, type:"Magazine",
+   just:"Magazine documentaire sérieux, mais commercial et parfois difficile à lire.",
+   rech:"https://www.nationalgeographic.fr/search?q=", mat:["sciences","geographie","histoire"]},
+  {dom:"www.francetvinfo.fr", nom:"France Info", niv:4, type:"Presse",
+   just:"Média du service public, écrit pour les adultes.",
+   rech:"https://www.francetvinfo.fr/recherche?query=", mat:["emc","geographie","sciences"]}
+];
+
+/* Types de sites systématiquement dégradés ou bloqués */
+const DOMAINES_FAIBLES = [
+  {motif:"blogspot", niv:1, just:"Blog personnel : aucune vérification, auteur inconnu."},
+  {motif:"wordpress.com", niv:1, just:"Blog personnel : aucune vérification, auteur inconnu."},
+  {motif:"over-blog", niv:1, just:"Blog personnel : aucune vérification, auteur inconnu."},
+  {motif:"forum", niv:1, just:"Forum de discussion : ce sont des avis, pas des informations vérifiées."},
+  {motif:"doc-etudiant", niv:1, just:"Site de devoirs recopiés : contenu non vérifié."},
+  {motif:"pinterest", niv:1, just:"Réseau social d'images : la source d'origine est inconnue."},
+  {motif:"tiktok", niv:1, just:"Réseau social : aucune vérification des informations."},
+  {motif:"facebook", niv:1, just:"Réseau social : aucune vérification des informations."},
+  {motif:"youtube", niv:2, just:"Vidéo en ligne : la chaîne doit être vérifiée par l'enseignant avant utilisation."},
+  {motif:"blog", niv:2, just:"Blog : vérifier qui écrit et si l'information est confirmée ailleurs."}
+];
+
+/* =====================================================================
+   2. SUJETS DU PROGRAMME DE CYCLE 3
+   Pour chaque sujet : mots-clés, matière, sources directes vérifiées,
+   et plan d'exposé proposé.
+   ===================================================================== */
+const SUJETS = [
+  {id:"volcans", titre:"Les volcans", mat:"sciences",
+   cles:["volcan","volcans","eruption","éruption","lave","magma","cratere","cratère"],
+   directes:[
+     {t:"Volcan — article encyclopédique", u:"https://fr.vikidia.org/wiki/Volcan", d:"fr.vikidia.org"},
+     {t:"Éruption volcanique", u:"https://fr.vikidia.org/wiki/%C3%89ruption_volcanique", d:"fr.vikidia.org"},
+     {t:"Vidéos et dossiers sur les volcans", u:"https://www.lumni.fr/recherche?q=volcan", d:"www.lumni.fr"}
+   ],
+   plan:["Qu'est-ce qu'un volcan ? (les mots : cratère, lave, magma)",
+         "Comment se produit une éruption ?",
+         "Les différents types de volcans dans le monde",
+         "Vivre à côté d'un volcan : danger et surveillance"]},
+
+  {id:"systeme-solaire", titre:"Le système solaire", mat:"sciences",
+   cles:["systeme solaire","système solaire","planete","planète","planetes","planètes","soleil","espace","mars","jupiter","lune"],
+   directes:[
+     {t:"Système solaire", u:"https://fr.vikidia.org/w/index.php?search=Syst%C3%A8me%20solaire&ns0=1", d:"fr.vikidia.org"},
+     {t:"Les planètes du système solaire", u:"https://fr.vikidia.org/w/index.php?search=Plan%C3%A8te&ns0=1", d:"fr.vikidia.org"},
+     {t:"Ressources du CNES sur l'espace", u:"https://cnes.fr/recherche?keys=syst%C3%A8me%20solaire", d:"cnes.fr"},
+     {t:"Vidéos sur le système solaire", u:"https://www.lumni.fr/recherche?q=syst%C3%A8me%20solaire", d:"www.lumni.fr"}
+   ],
+   plan:["Le Soleil, une étoile au centre de tout",
+         "Les huit planètes et leur ordre",
+         "Pourquoi les planètes tournent-elles ?",
+         "Comment explore-t-on l'espace aujourd'hui ?"]},
+
+  {id:"egypte", titre:"L'Égypte ancienne", mat:"histoire",
+   cles:["egypte","égypte","pharaon","pyramide","pyramides","hieroglyphe","hiéroglyphe","nil","momie"],
+   directes:[
+     {t:"Égypte antique", u:"https://fr.vikidia.org/w/index.php?search=%C3%89gypte%20antique&ns0=1", d:"fr.vikidia.org"},
+     {t:"Pyramides d'Égypte", u:"https://fr.vikidia.org/w/index.php?search=Pyramides%20d%27%C3%89gypte&ns0=1", d:"fr.vikidia.org"},
+     {t:"Collections égyptiennes du Louvre", u:"https://www.louvre.fr/recherche?query=%C3%89gypte", d:"www.louvre.fr"},
+     {t:"Dossier pédagogique de la BnF", u:"https://classes.bnf.fr/recherche?q=%C3%A9gypte", d:"classes.bnf.fr"}
+   ],
+   plan:["Où et quand ? L'Égypte et le Nil",
+         "Le pharaon et l'organisation de la société",
+         "Construire une pyramide : comment faisaient-ils ?",
+         "L'écriture : les hiéroglyphes",
+         "Les croyances et les momies"]},
+
+  {id:"prehistoire", titre:"La préhistoire", mat:"histoire",
+   cles:["prehistoire","préhistoire","homme prehistorique","lascaux","neandertal","paleolithique","paléolithique","neolithique","néolithique","feu"],
+   directes:[
+     {t:"Préhistoire", u:"https://fr.vikidia.org/w/index.php?search=Pr%C3%A9histoire&ns0=1", d:"fr.vikidia.org"},
+     {t:"Grotte de Lascaux", u:"https://fr.vikidia.org/w/index.php?search=Grotte%20de%20Lascaux&ns0=1", d:"fr.vikidia.org"},
+     {t:"Ressources sur la préhistoire", u:"https://www.lumni.fr/recherche?q=pr%C3%A9histoire", d:"www.lumni.fr"},
+     {t:"Sites préhistoriques classés", u:"https://www.monuments-nationaux.fr/recherche?q=pr%C3%A9histoire", d:"www.monuments-nationaux.fr"}
+   ],
+   plan:["Qu'appelle-t-on la préhistoire ?",
+         "Les premiers humains et leurs outils",
+         "La maîtrise du feu : un tournant",
+         "L'art des grottes : Lascaux et Chauvet",
+         "Du chasseur-cueilleur au premier agriculteur"]},
+
+  {id:"moyen-age", titre:"Le Moyen Âge et les châteaux forts", mat:"histoire",
+   cles:["moyen age","moyen âge","chateau fort","château fort","chevalier","seigneur","feodalite","féodalité","cathedrale","cathédrale"],
+   directes:[
+     {t:"Moyen Âge", u:"https://fr.vikidia.org/w/index.php?search=Moyen%20%C3%82ge&ns0=1", d:"fr.vikidia.org"},
+     {t:"Château fort", u:"https://fr.vikidia.org/w/index.php?search=Ch%C3%A2teau%20fort&ns0=1", d:"fr.vikidia.org"},
+     {t:"Monuments médiévaux à visiter", u:"https://www.monuments-nationaux.fr/recherche?q=moyen%20%C3%A2ge", d:"www.monuments-nationaux.fr"},
+     {t:"Dossiers de la BnF sur le Moyen Âge", u:"https://classes.bnf.fr/recherche?q=moyen%20age", d:"classes.bnf.fr"}
+   ],
+   plan:["Quand se situe le Moyen Âge ?",
+         "À quoi sert un château fort ?",
+         "Qui vit dans le château et autour ?",
+         "Les métiers et la vie quotidienne",
+         "Les grandes constructions : les cathédrales"]},
+
+  {id:"revolution", titre:"La Révolution française", mat:"histoire",
+   cles:["revolution francaise","révolution française","1789","bastille","louis xvi","republique","république","declaration des droits"],
+   directes:[
+     {t:"Révolution française", u:"https://fr.vikidia.org/w/index.php?search=R%C3%A9volution%20fran%C3%A7aise&ns0=1", d:"fr.vikidia.org"},
+     {t:"Prise de la Bastille", u:"https://fr.vikidia.org/w/index.php?search=Prise%20de%20la%20Bastille&ns0=1", d:"fr.vikidia.org"},
+     {t:"Versailles avant la Révolution", u:"https://www.chateauversailles.fr/recherche?search_api_fulltext=r%C3%A9volution", d:"www.chateauversailles.fr"},
+     {t:"Vidéos sur la Révolution", u:"https://www.lumni.fr/recherche?q=r%C3%A9volution%20fran%C3%A7aise", d:"www.lumni.fr"}
+   ],
+   plan:["La France avant 1789 : les trois ordres",
+         "1789 : les grands événements de l'année",
+         "La Déclaration des droits de l'homme et du citoyen",
+         "De la monarchie à la République",
+         "Ce qu'il en reste aujourd'hui (drapeau, devise, 14 juillet)"]},
+
+  {id:"corps-humain", titre:"Le corps humain", mat:"sciences",
+   cles:["corps humain","squelette","muscle","muscles","digestion","respiration","coeur","cœur","sang","cerveau","os"],
+   directes:[
+     {t:"Corps humain", u:"https://fr.vikidia.org/w/index.php?search=Corps%20humain&ns0=1", d:"fr.vikidia.org"},
+     {t:"Squelette humain", u:"https://fr.vikidia.org/w/index.php?search=Squelette%20humain&ns0=1", d:"fr.vikidia.org"},
+     {t:"Ressources de la Cité des sciences", u:"https://www.cite-sciences.fr/fr/recherche?q=corps%20humain", d:"www.cite-sciences.fr"},
+     {t:"Vidéos sur le corps humain", u:"https://www.lumni.fr/recherche?q=corps%20humain", d:"www.lumni.fr"}
+   ],
+   plan:["Le squelette : la charpente du corps",
+         "Les muscles et le mouvement",
+         "Respirer : à quoi sert l'air ?",
+         "Manger et digérer",
+         "Le cœur et la circulation du sang"]},
+
+  {id:"eau", titre:"L'eau et son cycle", mat:"sciences",
+   cles:["eau","cycle de l'eau","riviere","rivière","nuage","pluie","ocean","océan","glacier","secheresse","sécheresse"],
+   directes:[
+     {t:"Cycle de l'eau", u:"https://fr.vikidia.org/w/index.php?search=Cycle%20de%20l%27eau&ns0=1", d:"fr.vikidia.org"},
+     {t:"Eau", u:"https://fr.vikidia.org/w/index.php?search=Eau&ns0=1", d:"fr.vikidia.org"},
+     {t:"Ressources de La main à la pâte", u:"https://www.fondation-lamap.org/recherche?search=eau", d:"www.fondation-lamap.org"},
+     {t:"L'eau et l'environnement (ADEME)", u:"https://jeunes.ademe.fr/?s=eau", d:"jeunes.ademe.fr"}
+   ],
+   plan:["Les trois états de l'eau",
+         "Le voyage de l'eau : évaporation, nuages, pluie",
+         "D'où vient l'eau du robinet ?",
+         "Pourquoi faut-il économiser l'eau ?"]},
+
+  {id:"dechets", titre:"Les déchets et le recyclage", mat:"sciences",
+   cles:["dechet","déchet","dechets","déchets","recyclage","tri","poubelle","plastique","pollution","compost"],
+   directes:[
+     {t:"Recyclage", u:"https://fr.vikidia.org/w/index.php?search=Recyclage&ns0=1", d:"fr.vikidia.org"},
+     {t:"Espace jeunes de l'ADEME", u:"https://jeunes.ademe.fr/?s=d%C3%A9chets", d:"jeunes.ademe.fr"},
+     {t:"Articles sur les déchets", u:"https://www.1jour1actu.com/?s=d%C3%A9chets", d:"www.1jour1actu.com"}
+   ],
+   plan:["D'où viennent nos déchets ?",
+         "Le tri : quelle poubelle pour quoi ?",
+         "Que devient un objet recyclé ?",
+         "Réduire ses déchets : des gestes simples"]},
+
+  {id:"animaux", titre:"Les animaux et leur milieu de vie", mat:"sciences",
+   cles:["animal","animaux","especes","espèces","biodiversite","biodiversité","foret","forêt","oiseau","insecte","dinosaure","dinosaures"],
+   directes:[
+     {t:"Biodiversité", u:"https://fr.vikidia.org/w/index.php?search=Biodiversit%C3%A9&ns0=1", d:"fr.vikidia.org"},
+     {t:"Collections du Muséum national d'Histoire naturelle", u:"https://www.mnhn.fr/fr/recherche?text=animaux", d:"www.mnhn.fr"},
+     {t:"Vidéos sur les animaux", u:"https://www.lumni.fr/recherche?q=animaux", d:"www.lumni.fr"}
+   ],
+   plan:["Présentation de l'animal (ou du groupe) choisi",
+         "Où vit-il ? Son milieu de vie",
+         "Que mange-t-il ? Sa place dans la chaîne alimentaire",
+         "Comment se reproduit-il ?",
+         "Est-il menacé ? Comment le protéger ?"]},
+
+  {id:"france-geo", titre:"La France : reliefs, fleuves et régions", mat:"geographie",
+   cles:["france","fleuve","fleuves","montagne","montagnes","region","région","relief","alpes","loire","seine","carte"],
+   directes:[
+     {t:"France", u:"https://fr.vikidia.org/wiki/France", d:"fr.vikidia.org"},
+     {t:"Cartes officielles (Géoportail)", u:"https://www.geoportail.gouv.fr/carte", d:"www.geoportail.gouv.fr"},
+     {t:"Chiffres et population (INSEE)", u:"https://www.insee.fr/fr/recherche?q=population%20r%C3%A9gions", d:"www.insee.fr"},
+     {t:"Vidéos de géographie", u:"https://www.lumni.fr/recherche?q=g%C3%A9ographie%20France", d:"www.lumni.fr"}
+   ],
+   plan:["Où se situe la France dans le monde ?",
+         "Les montagnes et les plaines",
+         "Les grands fleuves et leur rôle",
+         "Les régions et les grandes villes",
+         "Les paysages près de chez moi"]},
+
+  {id:"climat", titre:"Le climat et le réchauffement climatique", mat:"geographie",
+   cles:["climat","rechauffement","réchauffement","meteo","météo","temperature","température","gaz a effet de serre","banquise","saison"],
+   directes:[
+     {t:"Réchauffement climatique", u:"https://fr.vikidia.org/wiki/R%C3%A9chauffement_climatique", d:"fr.vikidia.org"},
+     {t:"Comprendre le climat (Météo-France)", u:"https://meteofrance.com/recherche?search=climat", d:"meteofrance.com"},
+     {t:"Dossier jeunes de l'ADEME", u:"https://jeunes.ademe.fr/?s=climat", d:"jeunes.ademe.fr"},
+     {t:"Articles pour les enfants", u:"https://www.1jour1actu.com/?s=climat", d:"www.1jour1actu.com"}
+   ],
+   plan:["Météo et climat : quelle différence ?",
+         "Pourquoi la Terre se réchauffe-t-elle ?",
+         "Ce que cela change déjà (glaciers, saisons, animaux)",
+         "Ce que l'on peut faire, à l'école et à la maison"]},
+
+  {id:"citoyennete", titre:"La République et la citoyenneté", mat:"emc",
+   cles:["republique","république","citoyen","citoyennete","citoyenneté","vote","election","élection","democratie","démocratie","symboles","marianne","drapeau","laicite","laïcité"],
+   directes:[
+     {t:"République française", u:"https://fr.vikidia.org/w/index.php?search=R%C3%A9publique%20fran%C3%A7aise&ns0=1", d:"fr.vikidia.org"},
+     {t:"Symboles de la République", u:"https://www.elysee.fr/recherche?query=symboles%20de%20la%20R%C3%A9publique", d:"www.elysee.fr"},
+     {t:"Comprendre les élections", u:"https://www.1jour1actu.com/?s=%C3%A9lection", d:"www.1jour1actu.com"}
+   ],
+   plan:["Qu'est-ce qu'une République ?",
+         "Les symboles : drapeau, Marianne, devise, hymne",
+         "Qui décide ? Élections et représentants",
+         "Les droits et les devoirs d'un citoyen",
+         "Être citoyen dans sa classe et son école"]}
+];
+
+/* Plan générique si le sujet n'est pas dans la liste */
+const PLAN_GENERIQUE = [
+  "De quoi je parle ? (définition simple)",
+  "Point important n°1",
+  "Point important n°2",
+  "Point important n°3"
+];
+
+/* =====================================================================
+   3. ÉTAT DE L'APPLICATION (enregistré dans le navigateur)
+   ===================================================================== */
+const CLE = "exposes-cycle3-v1";
+let etat = {
+  seuil: 3,
+  bloques: [],
+  sujet: "",
+  sujetId: null,
+  sources: [],        // toutes les sources rencontrées
+  choisies: [],       // identifiants des sources retenues par l'élève
+  plan: [],           // [{titre, texte, sources:[id]}]
+  titrePlan: "",
+  question: "",
+  eleves: [],         // [{id, prenom}]
+  eleveActif: null,
+  travaux: {},        // { eleveId : copie du travail }
+  evals: {},          // { eleveId : {c1..c6, oralSec, commentaire, date} }
+  evalActif: null
+};
+
+const CHAMPS_TRAVAIL = ["sujet","sujetId","choisies","plan","planSujetId","titrePlan","question","intro","etonnant","concl"];
+
+function sauver(){
+  if(etat.eleveActif){
+    const t = {};
+    CHAMPS_TRAVAIL.forEach(c => t[c] = etat[c]);
+    t.maj = new Date().toISOString();
+    t.seances = (etat.travaux[etat.eleveActif] && etat.travaux[etat.eleveActif].seances) || [];
+    const jour = new Date().toISOString().slice(0,10);
+    if(!t.seances.includes(jour)) t.seances.push(jour);
+    etat.travaux[etat.eleveActif] = t;
+  }
+  try{ localStorage.setItem(CLE, JSON.stringify(etat)); }catch(e){}
+}
+function charger(){
+  try{
+    const brut = localStorage.getItem(CLE);
+    if(brut) etat = Object.assign(etat, JSON.parse(brut));
+  }catch(e){}
+}
+
+/* =====================================================================
+   4. MODÉRATION : notation d'une adresse web
+   Cette fonction reproduit hors ligne la logique que le modèle d'IA
+   applique en ligne (voir dossier-technique.md, prompt de modération).
+   ===================================================================== */
+function noterUrl(url, titre){
+  let dom = "";
+  try{ dom = new URL(url).hostname.toLowerCase(); }
+  catch(e){ return {niv:1, just:"Adresse invalide.", type:"Inconnu", nom:"Site inconnu", bloque:true}; }
+
+  // 1. Liste noire de la classe
+  if(etat.bloques.some(b => dom.includes(b.toLowerCase())))
+    return {niv:1, just:"Site bloqué par l'enseignant pour la classe.", type:"Bloqué", nom:dom, bloque:true};
+
+  // 2. Site de confiance connu
+  const ref = REGISTRE.find(r => dom.endsWith(r.dom) || r.dom.endsWith(dom));
+  if(ref) return {niv:ref.niv, just:ref.just, type:ref.type, nom:ref.nom, bloque:false};
+
+  // 3. Motifs à risque
+  const faible = DOMAINES_FAIBLES.find(f => dom.includes(f.motif) || url.toLowerCase().includes(f.motif));
+  if(faible) return {niv:faible.niv, just:faible.just, type:"À vérifier", nom:dom, bloque:false};
+
+  // 4. Domaines institutionnels génériques
+  if(/\.gouv\.fr$/.test(dom)) return {niv:5, just:"Site officiel de l'État français.", type:"Organisme officiel", nom:dom, bloque:false};
+  if(/(^|\.)(ac-[a-z-]+\.fr|education\.fr)$/.test(dom)) return {niv:5, just:"Site de l'Éducation nationale.", type:"Éducation", nom:dom, bloque:false};
+  if(/\.edu$|\.univ-[a-z-]+\.fr$|\.cnrs\.fr$/.test(dom)) return {niv:4, just:"Site universitaire ou de recherche : fiable mais souvent difficile à lire.", type:"Recherche", nom:dom, bloque:false};
+  if(/\.org$/.test(dom)) return {niv:3, just:"Association : vérifier qui écrit et croiser avec une autre source.", type:"Association", nom:dom, bloque:false};
+  if(/\.(com|net|fr)$/.test(dom)) return {niv:2, just:"Site non identifié : l'auteur et le sérieux de l'information ne sont pas garantis.", type:"Inconnu", nom:dom, bloque:false};
+
+  return {niv:2, just:"Site non reconnu par l'application.", type:"Inconnu", nom:dom, bloque:false};
+}
+
+/* =====================================================================
+   5. RECHERCHE DE SOURCES
+   ===================================================================== */
+/* Empreinte stable et unique d'une URL (algorithme djb2) */
+function empreinte(txt){
+  let h = 5381;
+  for(let i=0; i<txt.length; i++) h = ((h*33) ^ txt.charCodeAt(i)) >>> 0;
+  return h.toString(36) + "_" + txt.length;
+}
+
+function normaliser(t){
+  return t.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+}
+
+function trouverSujet(requete){
+  const q = normaliser(requete);
+  let meilleur = null, score = 0;
+  SUJETS.forEach(s => {
+    let pts = 0;
+    if(normaliser(s.titre) === q) pts += 10;
+    s.cles.forEach(c => {
+      const cn = normaliser(c);
+      if(q.includes(cn)) pts += cn.length;
+    });
+    if(pts > score){ score = pts; meilleur = s; }
+  });
+  return score > 2 ? meilleur : null;
+}
+
+function chercher(){
+  const requete = document.getElementById("champ-sujet").value.trim();
+  if(!requete){ alert("Écris d'abord ton sujet."); return; }
+
+  etat.sujet = requete;
+  const sujet = trouverSujet(requete);
+  etat.sujetId = sujet ? sujet.id : null;
+
+  const trouvees = [];
+
+  // a) sources directes vérifiées pour ce sujet
+  if(sujet){
+    sujet.directes.forEach(d => {
+      const n = noterUrl(d.u, d.t);
+      trouvees.push({
+        id: "s_" + empreinte(d.u),
+        titre: d.t, url: d.u, organisme: n.nom, type: n.type,
+        niv: n.niv, just: n.just, bloque: n.bloque,
+        resume: "Ressource sélectionnée sur « " + sujet.titre.toLowerCase() + " ».",
+        date: "vérifiée le " + new Date().toLocaleDateString("fr-FR"),
+        statut: "proposée", direct: true
+      });
+    });
+  }
+
+  // b) recherches guidées sur les sites de confiance de la bonne matière
+  const mat = sujet ? sujet.mat : null;
+  REGISTRE.filter(r => !mat || r.mat.includes(mat))
+    .filter(r => !trouvees.some(t => t.organisme === r.nom))
+    .slice(0, 8)
+    .forEach(r => {
+      const url = r.rech + encodeURIComponent(requete);
+      const n = noterUrl(url, r.nom);
+      trouvees.push({
+        id: "r_" + r.dom.replace(/\W/g,""),
+        titre: "Chercher « " + requete + " » sur " + r.nom,
+        url: url, organisme: r.nom, type: r.type,
+        niv: n.niv, just: n.just, bloque: n.bloque,
+        resume: "Recherche guidée sur un site de confiance. Ouvre la page et choisis l'article qui correspond à ton sujet.",
+        date: "site vérifié", statut: "proposée", direct: false
+      });
+    });
+
+  // fusion avec les sources déjà connues (on garde le statut du prof)
+  trouvees.forEach(t => {
+    const dejà = etat.sources.find(s => s.id === t.id);
+    if(dejà){ dejà.titre = t.titre; dejà.url = t.url; dejà.niv = t.niv; }
+    else etat.sources.push(t);
+  });
+
+  sauver();
+  afficherResultats(trouvees, sujet);
+}
+
+function afficherResultats(liste, sujet){
+  const z = document.getElementById("zone-resultats");
+  const visibles = liste
+    .map(t => etat.sources.find(s => s.id === t.id) || t)
+    .filter(s => s.statut !== "rejetée" && !s.bloque && s.niv >= etat.seuil)
+    .sort((a,b) => b.niv - a.niv || (b.direct?1:0) - (a.direct?1:0));
+
+  const caches = liste.length - visibles.length;
+
+  let h = '<div class="carte">';
+  h += '<h2>' + (sujet ? "Sujet reconnu : " + sujet.titre : "Sources trouvées pour « " + etat.sujet + " »") + '</h2>';
+  h += '<p class="sous">' + visibles.length + ' source(s) fiable(s) proposée(s).' +
+       (caches > 0 ? ' ' + caches + ' source(s) écartée(s) car pas assez fiable(s).' : '') + '</p>';
+  if(!sujet) h += '<div class="alerte">Ce sujet n\'est pas encore dans la base de la classe. L\'application propose des recherches guidées sur des sites de confiance. Demande à ton enseignant de valider les pages que tu utilises.</div>';
+  h += '<div class="info">Coche les sources que tu veux utiliser, puis clique sur « Construire mon plan » en bas.</div>';
+  h += '</div>';
+
+  visibles.forEach(s => {
+    const coche = etat.choisies.includes(s.id);
+    h += '<div class="source n' + s.niv + '">';
+    h += '<div class="ligne-meta">';
+    h += '<span class="score n' + s.niv + '">Fiabilité ' + s.niv + '/5 ' + "★".repeat(s.niv) + '</span>';
+    h += '<span class="etiquette">' + s.type + '</span>';
+    h += '<span class="etiquette">' + s.organisme + '</span>';
+    h += '</div>';
+    h += '<h3><a href="' + s.url + '" target="_blank" rel="noopener noreferrer">' + s.titre + '</a></h3>';
+    h += '<p class="resume">' + s.resume + '</p>';
+    h += '<p class="justif">Pourquoi on peut lui faire confiance : ' + s.just + '</p>';
+    h += '<div class="actions-source">';
+    h += '<label class="choisir' + (coche ? ' coche' : '') + '"><input type="checkbox" ' + (coche?'checked':'') +
+         ' onchange="basculerChoix(\'' + s.id + '\', this)"> Je garde cette source</label>';
+    h += '<button class="secondaire" onclick="window.open(\'' + s.url + '\',\'_blank\',\'noopener\')">Ouvrir la page</button>';
+    h += '</div></div>';
+  });
+
+  if(!visibles.length) h += '<div class="carte vide">Aucune source ne dépasse le seuil de fiabilité réglé par l\'enseignant. Essaie d\'écrire ton sujet autrement.</div>';
+
+  h += '<div class="carte" style="text-align:center">';
+  h += '<button class="principal" onclick="construirePlan()">✏️ Construire mon plan d\'exposé</button>';
+  h += '</div>';
+
+  z.innerHTML = h;
+  document.querySelectorAll("#vue-eleve .etape")[0].className = "etape fait";
+  document.querySelectorAll("#vue-eleve .etape")[1].className = "etape actif";
+  z.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function basculerChoix(id, el){
+  if(el.checked){ if(!etat.choisies.includes(id)) etat.choisies.push(id); }
+  else etat.choisies = etat.choisies.filter(x => x !== id);
+  el.parentElement.classList.toggle("coche", el.checked);
+  sauver();
+}
+
+/* =====================================================================
+   6. CONSTRUCTEUR DE PLAN
+   ===================================================================== */
+function construirePlan(){
+  if(!etat.choisies.length && !confirm("Tu n'as gardé aucune source. Continuer quand même ?")) return;
+
+  const sujet = SUJETS.find(s => s.id === etat.sujetId);
+  const parties = sujet ? sujet.plan : PLAN_GENERIQUE;
+
+  if(!etat.plan.length || etat.planSujetId !== etat.sujetId){
+    etat.plan = parties.map(p => ({titre:p, texte:"", sources:[]}));
+    etat.planSujetId = etat.sujetId;
+  }
+  if(!etat.titrePlan) etat.titrePlan = sujet ? sujet.titre : etat.sujet;
+  sauver();
+  allerA("plan");
+}
+
+function afficherPlan(){
+  const src = etat.sources.filter(s => etat.choisies.includes(s.id));
+
+  document.getElementById("entete-plan").innerHTML =
+    '<h2>Mon exposé</h2>' +
+    '<p class="sous">Remplis chaque partie avec tes propres mots. Rattache tes sources à chaque partie.</p>' +
+    '<label style="font-weight:600">Titre de mon exposé<br><input id="titre-plan" style="width:100%;padding:12px;font-size:1.05rem;border:2px solid var(--bord);border-radius:10px;margin-top:6px" value="' +
+      (etat.titrePlan||"").replace(/"/g,'&quot;') + '" oninput="etat.titrePlan=this.value;sauver()"></label>' +
+    '<label style="font-weight:600;display:block;margin-top:12px">La question à laquelle je réponds<br><input id="question-plan" style="width:100%;padding:12px;font-size:1.05rem;border:2px solid var(--bord);border-radius:10px;margin-top:6px" placeholder="Exemple : pourquoi les volcans entrent-ils en éruption ?" value="' +
+      (etat.question||"").replace(/"/g,'&quot;') + '" oninput="etat.question=this.value;sauver()"></label>';
+
+  const blocs = [
+    {cle:"intro", titre:"Introduction", aide:"Présente ton sujet et dis pourquoi il t'intéresse (2 ou 3 phrases)."},
+    ...etat.plan.map((p,i) => ({cle:"p"+i, titre:"Partie " + (i+1) + " — " + p.titre, aide:"Écris ici ce que tu as compris, avec tes mots. Ne recopie pas la source.", idx:i})),
+    {cle:"etonnant", titre:"Ce que j'ai trouvé étonnant", aide:"Ce qui t'a le plus surpris pendant tes recherches."},
+    {cle:"concl", titre:"Conclusion", aide:"Résume en une phrase, puis pose une question pour la classe."}
+  ];
+
+  let h = "";
+  blocs.forEach(b => {
+    const p = b.idx !== undefined ? etat.plan[b.idx] : (etat[b.cle] || {texte:"", sources:[]});
+    if(b.idx === undefined && !etat[b.cle]) etat[b.cle] = {texte:"", sources:[]};
+    const donnees = b.idx !== undefined ? etat.plan[b.idx] : etat[b.cle];
+
+    h += '<div class="partie">';
+    h += '<h4>' + b.titre + '</h4>';
+    h += '<p class="aide">' + b.aide + '</p>';
+    h += '<textarea oninput="majTexte(\'' + b.cle + '\',' + (b.idx!==undefined?b.idx:'null') + ',this.value)">' + (donnees.texte||"") + '</textarea>';
+    if(src.length){
+      h += '<div class="rattache"><strong>Sources utilisées pour cette partie :</strong>';
+      src.forEach(s => {
+        const ok = (donnees.sources||[]).includes(s.id);
+        h += '<label><input type="checkbox" ' + (ok?'checked':'') +
+             ' onchange="majSourcePartie(\'' + b.cle + '\',' + (b.idx!==undefined?b.idx:'null') + ',\'' + s.id + '\',this.checked)"> ' +
+             s.organisme + ' — ' + s.titre + ' <span class="score n' + s.niv + '">' + s.niv + '/5</span></label>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+  });
+
+  // Bibliographie automatique
+  h += '<div class="partie"><h4>Mes sources</h4>';
+  h += '<p class="aide">Cette liste est construite automatiquement. Cite toujours tes sources à la fin de ton exposé.</p>';
+  if(src.length){
+    h += '<ol>';
+    src.forEach(s => {
+      h += '<li><strong>' + s.titre + '</strong> — ' + s.organisme +
+           ' <span class="score n' + s.niv + '">fiabilité ' + s.niv + '/5</span><br>' +
+           '<span style="font-size:.85rem;color:var(--gris);word-break:break-all">' + s.url + '</span></li>';
+    });
+    h += '</ol>';
+  } else {
+    h += '<p class="vide">Aucune source retenue pour l\'instant.</p>';
+  }
+  h += '</div>';
+
+  h += '<div class="carte" style="text-align:center">' +
+       '<button class="principal" onclick="window.print()">🖨️ Imprimer / enregistrer en PDF</button> ' +
+       '<button class="secondaire" onclick="allerA(\'eleve\')">← Revenir aux sources</button>' +
+       '</div>';
+
+  document.getElementById("zone-plan").innerHTML = h;
+}
+
+function majTexte(cle, idx, val){
+  if(idx !== null && idx !== undefined) etat.plan[idx].texte = val;
+  else { etat[cle] = etat[cle] || {texte:"", sources:[]}; etat[cle].texte = val; }
+  sauver();
+}
+function majSourcePartie(cle, idx, id, ok){
+  const cible = (idx !== null && idx !== undefined) ? etat.plan[idx] : (etat[cle] = etat[cle] || {texte:"", sources:[]});
+  cible.sources = cible.sources || [];
+  if(ok){ if(!cible.sources.includes(id)) cible.sources.push(id); }
+  else cible.sources = cible.sources.filter(x => x !== id);
+  sauver();
+}
+
+/* =====================================================================
+   7. ESPACE ENSEIGNANT
+   ===================================================================== */
+function majSeuil(v){
+  etat.seuil = parseInt(v,10);
+  document.getElementById("val-seuil").textContent = etat.seuil + "/5";
+  sauver();
+}
+
+function ajouterSource(){
+  const url = document.getElementById("ajout-url").value.trim();
+  const titre = document.getElementById("ajout-titre").value.trim() || url;
+  if(!/^https?:\/\//.test(url)){ alert("Entrez une adresse commençant par https://"); return; }
+  const n = noterUrl(url, titre);
+  etat.sources.push({
+    id: "m_" + Date.now(), titre: titre, url: url, organisme: n.nom, type: n.type,
+    niv: n.niv, just: n.just, bloque: n.bloque,
+    resume: "Source ajoutée par l'enseignant.",
+    date: new Date().toLocaleDateString("fr-FR"),
+    statut: n.niv >= 4 ? "validée" : "proposée", direct: true
+  });
+  document.getElementById("ajout-url").value = "";
+  document.getElementById("ajout-titre").value = "";
+  sauver(); afficherProf();
+  alert("Analyse : " + n.niv + "/5 — " + n.just);
+}
+
+function bloquerDomaine(){
+  const d = document.getElementById("ajout-bloc").value.trim().toLowerCase();
+  if(!d) return;
+  if(!etat.bloques.includes(d)) etat.bloques.push(d);
+  document.getElementById("ajout-bloc").value = "";
+  etat.sources.forEach(s => { if(s.url.toLowerCase().includes(d)){ s.bloque = true; s.statut = "rejetée"; } });
+  sauver(); afficherProf();
+}
+function debloquer(d){
+  etat.bloques = etat.bloques.filter(x => x !== d);
+  sauver(); afficherProf();
+}
+function changerStatut(id, st){
+  const s = etat.sources.find(x => x.id === id);
+  if(s){ s.statut = st; if(st !== "rejetée") s.bloque = false; }
+  sauver(); afficherProf();
+}
+
+function afficherProf(){
+  document.getElementById("seuil").value = etat.seuil;
+  document.getElementById("val-seuil").textContent = etat.seuil + "/5";
+
+  document.getElementById("liste-bloques").innerHTML =
+    etat.bloques.length
+      ? etat.bloques.map(d => '<button class="puce" onclick="debloquer(\'' + d + '\')">' + d + ' ✕</button>').join("")
+      : '<span class="sous">Aucun site bloqué pour l\'instant.</span>';
+
+  const t = document.getElementById("tableau-prof");
+  if(!etat.sources.length){
+    t.innerHTML = '<div class="vide">Aucune recherche n\'a encore été faite.</div>';
+  } else {
+    let h = '<table><tr><th>Source</th><th>Site</th><th>Score</th><th>Statut</th><th>Action</th></tr>';
+    etat.sources.slice().sort((a,b)=>b.niv-a.niv).forEach(s => {
+      h += '<tr><td><a href="' + s.url + '" target="_blank" rel="noopener noreferrer">' + s.titre + '</a></td>' +
+           '<td>' + s.organisme + '</td>' +
+           '<td><span class="score n' + s.niv + '">' + s.niv + '/5</span></td>' +
+           '<td>' + s.statut + '</td>' +
+           '<td><button class="secondaire" onclick="changerStatut(\'' + s.id + '\',\'validée\')">Valider</button> ' +
+           '<button class="secondaire" onclick="changerStatut(\'' + s.id + '\',\'rejetée\')">Rejeter</button></td></tr>';
+    });
+    t.innerHTML = h + '</table>';
+  }
+
+  let r = '<table><tr><th>Site</th><th>Type</th><th>Niveau</th><th>Pourquoi ce niveau</th></tr>';
+  REGISTRE.forEach(x => {
+    r += '<tr><td>' + x.nom + '<br><span style="font-size:.8rem;color:var(--gris)">' + x.dom + '</span></td>' +
+         '<td>' + x.type + '</td><td><span class="score n' + x.niv + '">' + x.niv + '/5</span></td>' +
+         '<td>' + x.just + '</td></tr>';
+  });
+  document.getElementById("tableau-registre").innerHTML = r + '</table>';
+}
+
+function reinitialiser(){
+  if(!confirm("Effacer toutes les recherches, sources et plans enregistrés ?")) return;
+  localStorage.removeItem(CLE);
+  location.reload();
+}
+
+/* =====================================================================
+   8. ÉVALUATION — grille, indicateurs, appréciation, exports
+   ===================================================================== */
+
+const NIVEAUX = [
+  {n:1, court:"Insuffisante", long:"Maîtrise insuffisante", coul:"n1"},
+  {n:2, court:"Fragile",      long:"Maîtrise fragile",      coul:"n2"},
+  {n:3, court:"Satisfaisante",long:"Maîtrise satisfaisante",coul:"n4"},
+  {n:4, court:"Très bonne",   long:"Très bonne maîtrise",   coul:"n5"}
+];
+
+const CRITERES = [
+  {id:"c1", titre:"Chercher et choisir des sources fiables",
+   dom:"Domaine 2 — Méthodes et outils pour apprendre (éducation aux médias)",
+   auto:"sources",
+   phrases:["ne parvient pas encore à distinguer une source fiable d'une source douteuse",
+            "choisit ses sources avec l'aide de l'adulte",
+            "sait choisir des sources fiables",
+            "choisit des sources fiables et variées, et sait expliquer pourquoi"]},
+  {id:"c2", titre:"Reformuler avec ses propres mots",
+   dom:"Domaine 1 — Les langages pour penser et communiquer (écrire)",
+   auto:"reformulation",
+   phrases:["recopie encore les textes trouvés",
+            "reformule quelques passages, mais recopie souvent",
+            "reformule l'essentiel avec ses propres mots",
+            "reformule avec aisance et explique ce qu'il a compris"]},
+  {id:"c3", titre:"Organiser son exposé (plan clair)",
+   dom:"Domaine 2 — Méthodes et outils pour apprendre",
+   auto:"plan",
+   phrases:["a besoin d'aide pour organiser ses idées",
+            "construit un plan encore incomplet",
+            "organise son exposé en parties claires",
+            "construit un plan structuré et progressif"]},
+  {id:"c4", titre:"Contenu exact et adapté au sujet",
+   dom:"Domaines 4 et 5 — Connaissances disciplinaires",
+   phrases:["présente des informations souvent inexactes ou hors sujet",
+            "apporte quelques informations justes, encore incomplètes",
+            "apporte des informations justes et adaptées au sujet",
+            "maîtrise son sujet et apporte des informations précises"]},
+  {id:"c5", titre:"S'exprimer à l'oral devant la classe",
+   dom:"Domaine 1 — Les langages pour penser et communiquer (parler)",
+   phrases:["lit son texte sans s'adresser à la classe",
+            "s'exprime de façon encore hésitante",
+            "s'exprime clairement devant la classe",
+            "capte l'attention de la classe et s'exprime avec assurance"]},
+  {id:"c6", titre:"Citer ses sources et exercer son esprit critique",
+   dom:"Domaine 3 — Formation de la personne et du citoyen",
+   auto:"citation",
+   phrases:["ne cite pas encore ses sources",
+            "cite ses sources de façon incomplète",
+            "cite ses sources correctement",
+            "cite ses sources et s'interroge sur leur fiabilité"]}
+];
+
+/* ---- Indicateurs calculés automatiquement à partir du travail de l'élève ---- */
+function indicateurs(eleveId){
+  const t = etat.travaux[eleveId];
+  if(!t) return null;
+  const src = (t.choisies||[]).map(id => etat.sources.find(s => s.id === id)).filter(Boolean);
+  const parties = (t.plan||[]);
+  const blocs = [t.intro, ...parties, t.etonnant, t.concl].filter(Boolean);
+  const mots = blocs.reduce((a,b) => a + ((b.texte||"").trim() ? (b.texte||"").trim().split(/\s+/).length : 0), 0);
+  const remplies = parties.filter(p => (p.texte||"").trim().length > 15).length;
+  const rattachees = parties.filter(p => (p.sources||[]).length > 0).length;
+  return {
+    nbSources: src.length,
+    fiabMoy: src.length ? +(src.reduce((a,s) => a + s.niv, 0) / src.length).toFixed(1) : 0,
+    nbTypes: new Set(src.map(s => s.type)).size,
+    parties: parties.length,
+    remplies: remplies,
+    tauxRemplissage: parties.length ? Math.round(100 * remplies / parties.length) : 0,
+    tauxRattachement: parties.length ? Math.round(100 * rattachees / parties.length) : 0,
+    mots: mots,
+    seances: (t.seances||[]).length,
+    sujet: t.titrePlan || t.sujet || "—",
+    introFaite: !!(t.intro && (t.intro.texte||"").trim()),
+    conclFaite: !!(t.concl && (t.concl.texte||"").trim())
+  };
+}
+
+/* Niveau suggéré (jamais imposé) à partir des indicateurs */
+function suggestion(cle, ind){
+  if(!ind) return null;
+  if(cle === "sources"){
+    if(ind.nbSources === 0) return 1;
+    if(ind.nbSources >= 3 && ind.fiabMoy >= 4.5 && ind.nbTypes >= 2) return 4;
+    if(ind.nbSources >= 2 && ind.fiabMoy >= 4) return 3;
+    return 2;
+  }
+  if(cle === "plan"){
+    if(ind.tauxRemplissage === 0) return 1;
+    if(ind.tauxRemplissage === 100 && ind.introFaite && ind.conclFaite) return 4;
+    if(ind.tauxRemplissage >= 75) return 3;
+    return 2;
+  }
+  if(cle === "citation"){
+    if(ind.nbSources === 0) return 1;
+    if(ind.tauxRattachement === 100) return 4;
+    if(ind.tauxRattachement >= 50) return 3;
+    return 2;
+  }
+  if(cle === "reformulation"){
+    if(ind.mots < 20) return 1;
+    if(ind.mots >= 100) return 3;
+    return 2;
+  }
+  return null;
+}
+
+/* ---- Gestion de la liste de classe ---- */
+function ajouterEleve(){
+  const ch = document.getElementById("ajout-eleve");
+  const p = (ch.value||"").trim();
+  if(!p) return;
+  etat.eleves.push({id:"e_"+Date.now()+"_"+Math.floor(Math.random()*999), prenom:p});
+  ch.value = "";
+  sauver(); afficherEval(); majBarreEleve();
+}
+
+function importerListe(){
+  const txt = prompt("Collez la liste des prénoms (un par ligne ou séparés par des virgules) :");
+  if(!txt) return;
+  txt.split(/[\n,;]+/).map(x => x.trim()).filter(Boolean).forEach((p,i) => {
+    etat.eleves.push({id:"e_"+Date.now()+"_"+i, prenom:p});
+  });
+  sauver(); afficherEval(); majBarreEleve();
+}
+
+function retirerEleve(id){
+  if(!confirm("Retirer cet élève de la liste ? Son travail et son évaluation seront supprimés.")) return;
+  etat.eleves = etat.eleves.filter(e => e.id !== id);
+  delete etat.travaux[id]; delete etat.evals[id];
+  if(etat.eleveActif === id) etat.eleveActif = null;
+  if(etat.evalActif === id) etat.evalActif = null;
+  sauver(); afficherEval(); majBarreEleve();
+}
+
+/* Bascule du travail courant vers un élève */
+function choisirEleve(id){
+  sauver();
+  etat.eleveActif = id || null;
+  const t = id ? etat.travaux[id] : null;
+  CHAMPS_TRAVAIL.forEach(c => {
+    if(t && t[c] !== undefined) etat[c] = t[c];
+    else etat[c] = (c === "choisies" || c === "plan") ? [] : (c === "sujet" || c === "titrePlan" || c === "question") ? "" : null;
+  });
+  if(!etat.choisies) etat.choisies = [];
+  if(!etat.plan) etat.plan = [];
+  try{ localStorage.setItem(CLE, JSON.stringify(etat)); }catch(e){}
+  majBarreEleve();
+  const ch = document.getElementById("champ-sujet");
+  if(ch) ch.value = etat.sujet || "";
+  document.getElementById("zone-resultats").innerHTML = "";
+}
+
+function majBarreEleve(){
+  const b = document.getElementById("barre-eleve");
+  if(!b) return;
+  if(!etat.eleves.length){
+    b.innerHTML = '<span class="sous" style="margin:0">Aucune liste de classe. L\'enseignant peut en créer une dans l\'onglet <strong>Évaluation</strong>.</span>';
+    return;
+  }
+  const actif = etat.eleves.find(e => e.id === etat.eleveActif);
+  b.innerHTML = '<strong>Qui travaille ?</strong> ' +
+    '<select onchange="choisirEleve(this.value)" style="padding:8px 12px;font-size:1rem;border:2px solid var(--bord);border-radius:10px;margin-left:8px">' +
+    '<option value="">— choisis ton prénom —</option>' +
+    etat.eleves.map(e => '<option value="' + e.id + '"' + (e.id === etat.eleveActif ? ' selected' : '') + '>' + e.prenom + '</option>').join("") +
+    '</select>' + (actif ? ' <span class="etiquette">travail enregistré pour ' + actif.prenom + '</span>' : '');
+}
+
+/* ---- Chronomètre de l'oral ---- */
+let chrono = null, chronoSec = 0;
+function basculerChrono(){
+  if(chrono){ clearInterval(chrono); chrono = null; enregistrerOral(chronoSec); }
+  else { chrono = setInterval(() => { chronoSec++; majAffichageChrono(); }, 1000); }
+  majAffichageChrono();
+}
+function razChrono(){ if(chrono){clearInterval(chrono); chrono=null;} chronoSec = 0; enregistrerOral(0); majAffichageChrono(); }
+function majAffichageChrono(){
+  const el = document.getElementById("aff-chrono");
+  if(el) el.textContent = String(Math.floor(chronoSec/60)).padStart(2,"0") + ":" + String(chronoSec%60).padStart(2,"0");
+  const b = document.getElementById("btn-chrono");
+  if(b) b.textContent = chrono ? "⏸ Arrêter" : "▶ Démarrer";
+}
+function enregistrerOral(sec){
+  if(!etat.evalActif) return;
+  const ev = etat.evals[etat.evalActif] = etat.evals[etat.evalActif] || {};
+  ev.oralSec = sec;
+  sauver();
+}
+
+/* ---- Saisie de la grille ---- */
+function noter(critere, niveau){
+  if(!etat.evalActif) return;
+  const ev = etat.evals[etat.evalActif] = etat.evals[etat.evalActif] || {};
+  ev[critere] = niveau;
+  ev.date = new Date().toISOString().slice(0,10);
+  sauver(); afficherEval();
+}
+function majCommentaire(v){
+  if(!etat.evalActif) return;
+  const ev = etat.evals[etat.evalActif] = etat.evals[etat.evalActif] || {};
+  ev.commentaire = v;
+  sauver();
+}
+function choisirEval(id){ etat.evalActif = id; chronoSec = (etat.evals[id]||{}).oralSec || 0; sauver(); afficherEval(); }
+
+/* ---- Appréciation générée ---- */
+function appreciation(eleveId){
+  const ev = etat.evals[eleveId]; if(!ev) return "";
+  const prenom = (etat.eleves.find(e => e.id === eleveId)||{}).prenom || "L'élève";
+  const forts = [], faibles = [];
+  CRITERES.forEach(c => {
+    const n = ev[c.id];
+    if(!n) return;
+    (n >= 3 ? forts : faibles).push(c.phrases[n-1]);
+  });
+  if(!forts.length && !faibles.length) return "";
+  let t = prenom + " ";
+  if(forts.length) t += forts.join(", ") + ".";
+  if(faibles.length) t += (forts.length ? " Doit encore progresser : il " : "") + faibles.join(", ") + ".";
+  return t.replace(/\s+/g," ");
+}
+
+function moyenne20(eleveId){
+  const ev = etat.evals[eleveId]; if(!ev) return null;
+  const notes = CRITERES.map(c => ev[c.id]).filter(Boolean);
+  if(!notes.length) return null;
+  // 1→5, 2→10, 3→15, 4→20
+  return +(notes.reduce((a,b) => a + b*5, 0) / notes.length).toFixed(1);
+}
+
+/* ---- Affichage de l'onglet Évaluation ---- */
+function afficherEval(){
+  // liste de classe
+  const l = document.getElementById("liste-eleves");
+  l.innerHTML = etat.eleves.length
+    ? etat.eleves.map(e => {
+        const fait = etat.evals[e.id] && CRITERES.some(c => etat.evals[e.id][c.id]);
+        return '<button class="puce" style="' + (e.id === etat.evalActif ? 'background:var(--bleu);color:#fff' : (fait ? 'background:var(--vert-clair);color:#14532d' : '')) +
+               '" onclick="choisirEval(\'' + e.id + '\')">' + (fait ? '✓ ' : '') + e.prenom + '</button>';
+      }).join("") + ' <button class="puce" style="background:var(--rouge-clair);color:#7f1d1d" onclick="retirerEleveMenu()">Retirer un élève…</button>'
+    : '<span class="sous" style="margin:0">Ajoutez les prénoms de votre classe pour commencer.</span>';
+
+  const z = document.getElementById("zone-eval");
+  if(!etat.evalActif){
+    z.innerHTML = etat.eleves.length ? '<div class="carte vide">Cliquez sur un prénom pour évaluer son exposé.</div>' : '';
+    afficherBilan(); return;
+  }
+
+  const eleve = etat.eleves.find(e => e.id === etat.evalActif) || {prenom:"?"};
+  const ev = etat.evals[etat.evalActif] || {};
+  const ind = indicateurs(etat.evalActif);
+
+  let h = '<div class="carte"><h3 style="margin-top:0">' + eleve.prenom +
+          (ind ? ' — <span style="font-weight:400">' + ind.sujet + '</span>' : '') + '</h3>';
+
+  // indicateurs automatiques
+  if(ind){
+    h += '<div class="info" style="margin-bottom:0"><strong>Ce que l\'application a mesuré</strong><br>' +
+         ind.nbSources + ' source(s) retenue(s) · fiabilité moyenne ' + ind.fiabMoy + '/5 · ' +
+         ind.nbTypes + ' type(s) de support · ' + ind.remplies + '/' + ind.parties + ' partie(s) rédigée(s) · ' +
+         ind.mots + ' mots écrits · ' + ind.tauxRattachement + ' % des parties reliées à une source · ' +
+         ind.seances + ' séance(s) de travail' +
+         '<br><em>Ces chiffres aident à situer le travail. Ils ne remplacent pas votre jugement.</em></div>';
+  } else {
+    h += '<div class="alerte" style="margin-bottom:0">Aucun travail enregistré dans l\'application pour cet élève. La grille reste utilisable pour un exposé préparé sur papier.</div>';
+  }
+  h += '</div>';
+
+  // chronomètre
+  h += '<div class="carte"><h3 style="margin-top:0">Passage à l\'oral</h3>' +
+       '<div class="reglage"><span id="aff-chrono" style="font-size:2rem;font-weight:700;font-variant-numeric:tabular-nums">' +
+       String(Math.floor(chronoSec/60)).padStart(2,"0") + ":" + String(chronoSec%60).padStart(2,"0") + '</span>' +
+       '<button class="principal" id="btn-chrono" onclick="basculerChrono()">' + (chrono ? "⏸ Arrêter" : "▶ Démarrer") + '</button>' +
+       '<button class="secondaire" onclick="razChrono()">Remettre à zéro</button></div>' +
+       '<p class="sous" style="margin:0">Durée conseillée en CM : 5 à 8 minutes.</p></div>';
+
+  // grille
+  CRITERES.forEach(c => {
+    const sug = c.auto ? suggestion(c.auto, ind) : null;
+    h += '<div class="partie"><h4>' + c.titre + '</h4>';
+    h += '<p class="aide">' + c.dom + (sug ? ' · <strong>Niveau suggéré par les indicateurs : ' + NIVEAUX[sug-1].long + '</strong>' : '') + '</p>';
+    h += '<div class="puces" style="margin-top:0">';
+    NIVEAUX.forEach(n => {
+      const choisi = ev[c.id] === n.n;
+      h += '<button class="puce" style="' + (choisi ? 'background:var(--bleu);color:#fff' : (sug === n.n ? 'outline:2px dashed var(--bleu)' : '')) +
+           '" onclick="noter(\'' + c.id + '\',' + n.n + ')">' + n.long + '</button>';
+    });
+    h += '</div></div>';
+  });
+
+  // commentaire + appréciation
+  const app = appreciation(etat.evalActif);
+  const moy = moyenne20(etat.evalActif);
+  h += '<div class="partie"><h4>Appréciation</h4>' +
+       '<p class="aide">Proposée à partir de la grille. Modifiable : votre texte remplace le texte généré.</p>' +
+       '<textarea placeholder="' + (app || "Remplissez la grille pour obtenir une proposition.").replace(/"/g,'&quot;') + '" oninput="majCommentaire(this.value)">' +
+       (ev.commentaire || "") + '</textarea>';
+  if(app) h += '<p style="margin:10px 0 0"><button class="secondaire" onclick="reprendreAppreciation()">↧ Reprendre la proposition</button></p>';
+  if(moy !== null) h += '<p class="sous" style="margin:10px 0 0">Équivalent chiffré indicatif : <strong>' + moy + '/20</strong> (non transmis au LSU, fourni si vous tenez un carnet de notes).</p>';
+  h += '</div>';
+
+  z.innerHTML = h;
+  afficherBilan();
+}
+
+function reprendreAppreciation(){
+  const app = appreciation(etat.evalActif);
+  const ev = etat.evals[etat.evalActif] = etat.evals[etat.evalActif] || {};
+  ev.commentaire = app;
+  sauver(); afficherEval();
+}
+
+function retirerEleveMenu(){
+  if(!etat.eleves.length) return;
+  const noms = etat.eleves.map((e,i) => (i+1) + ". " + e.prenom).join("\n");
+  const r = prompt("Numéro de l'élève à retirer :\n" + noms);
+  const i = parseInt(r,10) - 1;
+  if(!isNaN(i) && etat.eleves[i]) retirerEleve(etat.eleves[i].id);
+}
+
+/* ---- Bilan de classe + exports ---- */
+function afficherBilan(){
+  const b = document.getElementById("bilan-classe");
+  if(!etat.eleves.length){ b.innerHTML = ""; return; }
+
+  let h = '<h3 style="margin-top:0">Bilan de la classe</h3>';
+  h += '<table><tr><th>Élève</th><th>Sujet</th><th>Sources</th><th>Fiabilité</th><th>Plan</th>' +
+       CRITERES.map(c => '<th title="' + c.titre + '">' + c.id.toUpperCase() + '</th>').join("") +
+       '<th>/20</th></tr>';
+  etat.eleves.forEach(e => {
+    const ind = indicateurs(e.id), ev = etat.evals[e.id] || {};
+    h += '<tr><td><strong>' + e.prenom + '</strong></td>' +
+         '<td>' + (ind ? ind.sujet : '<span style="color:var(--gris)">non commencé</span>') + '</td>' +
+         '<td>' + (ind ? ind.nbSources : "—") + '</td>' +
+         '<td>' + (ind && ind.nbSources ? ind.fiabMoy + '/5' : "—") + '</td>' +
+         '<td>' + (ind ? ind.tauxRemplissage + ' %' : "—") + '</td>' +
+         CRITERES.map(c => '<td>' + (ev[c.id] ? '<span class="score ' + NIVEAUX[ev[c.id]-1].coul + '">' + ev[c.id] + '</span>' : '—') + '</td>').join("") +
+         '<td>' + (moyenne20(e.id) !== null ? '<strong>' + moyenne20(e.id) + '</strong>' : "—") + '</td></tr>';
+  });
+  h += '</table>';
+  h += '<p class="sous" style="margin:14px 0 6px">C1 sources · C2 reformulation · C3 plan · C4 contenu · C5 oral · C6 citation des sources</p>';
+  h += '<div class="puces">' +
+       '<button class="principal" onclick="exporterBilan()">⬇ Exporter le bilan (tableur)</button>' +
+       '<button class="secondaire" onclick="exporterCompetences()">⬇ Exporter le positionnement par compétence</button>' +
+       '<button class="secondaire" onclick="exporterAppreciations()">⬇ Exporter les appréciations</button>' +
+       '</div>';
+  h += '<p class="sous" style="margin:12px 0 0">Fichiers CSV séparés par des points-virgules : double-cliquez, ils s\'ouvrent directement dans Excel ou LibreOffice.</p>';
+  b.innerHTML = h;
+}
+
+function telecharger(nom, contenu){
+  const blob = new Blob(["﻿" + contenu], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = nom;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function q(v){ return '"' + String(v === null || v === undefined ? "" : v).replace(/"/g,'""') + '"'; }
+
+function exporterBilan(){
+  const entete = ["Prénom","Sujet","Nb sources","Fiabilité moyenne /5","Types de supports",
+                  "Parties rédigées %","Parties reliées à une source %","Mots écrits","Séances de travail",
+                  "Durée oral (mm:ss)", ...CRITERES.map(c => c.titre), "Équivalent /20","Appréciation","Date"];
+  const lignes = [entete.map(q).join(";")];
+  etat.eleves.forEach(e => {
+    const ind = indicateurs(e.id) || {}, ev = etat.evals[e.id] || {};
+    const sec = ev.oralSec || 0;
+    lignes.push([
+      e.prenom, ind.sujet || "", ind.nbSources ?? "", ind.fiabMoy ?? "", ind.nbTypes ?? "",
+      ind.tauxRemplissage ?? "", ind.tauxRattachement ?? "", ind.mots ?? "", ind.seances ?? "",
+      String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0"),
+      ...CRITERES.map(c => ev[c.id] ? NIVEAUX[ev[c.id]-1].long : ""),
+      moyenne20(e.id) ?? "", ev.commentaire || appreciation(e.id), ev.date || ""
+    ].map(q).join(";"));
+  });
+  telecharger("bilan-exposes-" + new Date().toISOString().slice(0,10) + ".csv", lignes.join("\r\n"));
+}
+
+function exporterCompetences(){
+  const lignes = [["Prénom","Domaine du socle","Compétence évaluée","Niveau de maîtrise","Code (1-4)","Date"].map(q).join(";")];
+  etat.eleves.forEach(e => {
+    const ev = etat.evals[e.id] || {};
+    CRITERES.forEach(c => {
+      if(!ev[c.id]) return;
+      lignes.push([e.prenom, c.dom, c.titre, NIVEAUX[ev[c.id]-1].long, ev[c.id], ev.date || ""].map(q).join(";"));
+    });
+  });
+  telecharger("positionnement-competences-" + new Date().toISOString().slice(0,10) + ".csv", lignes.join("\r\n"));
+}
+
+function exporterAppreciations(){
+  const lignes = [["Prénom","Sujet de l'exposé","Appréciation"].map(q).join(";")];
+  etat.eleves.forEach(e => {
+    const ind = indicateurs(e.id) || {}, ev = etat.evals[e.id] || {};
+    lignes.push([e.prenom, ind.sujet || "", ev.commentaire || appreciation(e.id)].map(q).join(";"));
+  });
+  telecharger("appreciations-exposes-" + new Date().toISOString().slice(0,10) + ".csv", lignes.join("\r\n"));
+}
+
+/* =====================================================================
+   9. NAVIGATION
+   ===================================================================== */
+function allerA(vue){
+  ["eleve","plan","eval","prof"].forEach(v => {
+    document.getElementById("vue-" + v).classList.toggle("actif", v === vue);
+    document.getElementById("ong-" + v).classList.toggle("actif", v === vue);
+  });
+  if(vue === "plan") afficherPlan();
+  if(vue === "eval") afficherEval();
+  if(vue === "prof") afficherProf();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* =====================================================================
+   10. DÉMARRAGE
+   ===================================================================== */
+charger();
+majBarreEleve();
+document.getElementById("puces-sujets").innerHTML =
+  '<span class="sous" style="width:100%;margin:0 0 4px">Sujets déjà préparés pour la classe :</span>' +
+  SUJETS.map(s => '<button class="puce" onclick="document.getElementById(\'champ-sujet\').value=\'' +
+    s.titre.replace(/'/g,"\\'") + '\';chercher()">' + s.titre + '</button>').join("");
+document.getElementById("seuil").value = etat.seuil;
+document.getElementById("val-seuil").textContent = etat.seuil + "/5";
+if(etat.sujet) document.getElementById("champ-sujet").value = etat.sujet;
+</script>
+</body>
+</html>

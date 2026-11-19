@@ -1,0 +1,96 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Animations pour comprendre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout : en-tête sobre, filtres, puis une grille de fiches par matière, chaque fiche = une animation */
+:root{
+  --bg:#F5F7FA; --paper:#FFFFFF; --ink:#1B2230; --muted:#5A6476; --line:#DCE1E8;
+  --hist:#A8431F; --geo:#1C6E61; --sci:#2856A8; --chip:#E9EDF3;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#11161E;--paper:#19202B;--ink:#E9EDF3;--muted:#A3ADBD;--line:#2C3544;--hist:#E27D57;--geo:#4DB8A5;--sci:#7DA4F0;--chip:#232C39;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11161E;--paper:#19202B;--ink:#E9EDF3;--muted:#A3ADBD;--line:#2C3544;--hist:#E27D57;--geo:#4DB8A5;--sci:#7DA4F0;--chip:#232C39;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:28px 48px}
+header{display:grid;gap:10px;margin-bottom:22px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,5vw,48px);line-height:1.05;margin:0;text-wrap:balance}
+.lead{max-width:68ch;color:var(--muted);margin:0}
+.keys{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.keys span{font-size:14px;background:var(--chip);border-radius:8px;padding:4px 10px}
+kbd{font-family:var(--body);font-weight:700}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 26px}
+.filters button{font:inherit;font-size:15px;font-weight:700;border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 16px;cursor:pointer;min-height:40px}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.filters button:focus-visible,.card a:focus-visible{outline:3px solid var(--sci);outline-offset:2px}
+.sep{width:1px;background:var(--line);margin:0 4px}
+section{margin-bottom:34px}
+h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+h2 small{font-family:var(--body);font-size:14px;color:var(--muted);font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-top:5px solid var(--c);border-radius:10px;padding:16px 18px;display:grid;gap:8px;align-content:start;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px;font-size:13px;font-weight:700}
+.meta span{background:var(--chip);border-radius:6px;padding:2px 8px}
+.meta .m{color:var(--c)}
+.card h3{font-family:var(--display);font-weight:600;font-size:20px;line-height:1.2;margin:0;text-wrap:balance}
+.prog{font-size:14px;color:var(--muted);margin:0}
+.mech{font-size:15px;margin:0}
+.myth{font-size:14px;margin:0;color:var(--muted)}
+.myth b{color:var(--ink)}
+.card a{justify-self:start;margin-top:4px;font-weight:700;color:var(--paper);background:var(--c);text-decoration:none;border-radius:8px;padding:9px 14px;min-height:44px;display:inline-flex;align-items:center;gap:6px}
+.card a:hover{filter:brightness(1.08)}
+.c-h{--c:var(--hist)} .c-g{--c:var(--geo)} .c-s{--c:var(--sci)}
+footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px;max-width:80ch}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style></head><body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Cycle 3 · CM1-CM2 · Période 1 · Années A et B</div>
+  <h1>Animations pour comprendre</h1>
+  <p class="lead">12 animations narrées pour la première période de la progression histoire-géographie-sciences. Chacune montre un mécanisme pas à pas, avec voix off, légendes, une manipulation pour les élèves et une idée fausse à déconstruire.</p>
+  <div class="keys"><span><kbd>Espace</kbd> lecture / pause</span><span><kbd>← →</kbd> étape précédente / suivante</span><span><kbd>R</kbd> recommencer</span><span><kbd>F</kbd> plein écran</span><span><kbd>V</kbd> voix off</span><span><kbd>C</kbd> ou 📷 capturer schéma</span><span>📱 balayage tactile</span><a href="documents/index-documents.html" style="text-decoration:none;font-weight:700;color:var(--ink);background:var(--chip);padding:4px 12px;border-radius:8px">🖨️ Affiches & Guides (A4 / A3)</a><a href="expose.html" style="margin-left:auto;text-decoration:none;font-weight:700;color:var(--paper);background:var(--sci);padding:4px 12px;border-radius:8px">🎓 Ouvrir l'Atelier Exposés →</a></div>
+</header>
+<div class="filters" role="group" aria-label="Filtrer">
+  <button data-f="all" aria-pressed="true">Tout</button>
+  <button data-f="h" aria-pressed="false">Histoire</button><button data-f="g" aria-pressed="false">Géographie</button><button data-f="s" aria-pressed="false">Sciences</button>
+  <span class="sep"></span>
+  <button data-y="A" aria-pressed="false">Année A</button><button data-y="B" aria-pressed="false">Année B</button>
+</div>
+<main id="list"></main>
+<footer>Les animations fonctionnent hors ligne : chaque fichier HTML est autonome. La voix off utilise les voix françaises installées sur l'ordinateur (meilleur rendu avec Edge sous Windows). Les données chiffrées sont arrondies et datées (communes : 2026).</footer>
+</div>
+<script>
+const A=[
+ ["h","A","Clovis et Charlemagne, héritiers de Rome","Thème 1 · Le Moyen Âge","Carte animée de 400 à 814 : chute de l'Empire d'Occident, conquêtes de Clovis, sacre de Charlemagne, et ce qui se transmet de Rome.","« En 476, tout ce qui était romain disparaît d'un coup. »",8,"histoire-A1-clovis-charlemagne"],
+ ["h","A","Le rôle social de l'Église","Thème 1 · Le Moyen Âge","La dîme (1 gerbe sur 10) finance l'hôtel-Dieu, les aumônes, la copie des livres et l'école.","« C'est le roi qui fait les hôpitaux et les écoles. »",5,"histoire-A1b-eglise-role-social"],
+ ["h","A","Art roman et art gothique","Thème 1 · Le Moyen Âge","La poussée des voûtes : murs épais du roman, croisée d'ogives et arcs-boutants du gothique. Curseur : agrandir les fenêtres.","« Le gothique, c'est grâce à des pierres plus solides. »",7,"histoire-A1c-roman-gothique"],
+ ["h","B","Le château fort : à quoi sert-il ?","Thème 1 · Le Moyen Âge","De la motte castrale au château de pierre ; défense contre un assaut, vie dans le donjon, domination de la seigneurie.","« Le château sert seulement à la guerre et tout le monde y habite. »",6,"histoire-B1-chateau-fort"],
+ ["h","B","La vie quotidienne des paysans","Thème 1 · Le Moyen Âge","Calendrier des travaux, assolement triennal, partage de la récolte entre semences, dîme, seigneur et famille.","« Les paysans gardent toute leur récolte. »",6,"histoire-B1b-vie-paysans"],
+ ["g","A","Se déplacer : ici et ailleurs","Thème 1 · Se déplacer","Mes trajets, course des modes de transport selon la distance, ville et campagne, exemples dans le monde.","« Partout, les enfants vont à l'école comme moi. »",5,"geo-A1-se-deplacer"],
+ ["g","B","Le découpage administratif de la France","Thème 1 · L'organisation du territoire","18 régions, 101 départements, 34 875 communes ; zoom sur la Bourgogne-Franche-Comté et la Côte-d'Or ; comparaison avec l'Île-de-France.","« Région, département, commune : c'est pareil. »",7,"geo-B1-decoupage-administratif"],
+ ["s","A","Le vélo : transmettre le mouvement","Les objets techniques","Pédales, plateau, chaîne, pignon, roue : 44 dents ÷ 11 dents = 4 tours de roue. Boutons pour changer de pignon.","« Un grand pignon fait aller plus vite. »",6,"sciences-A1-velo-transmission"],
+ ["s","A","Les capteurs météo","La planète Terre","Dilatation du liquide du thermomètre, coupelles de l'anémomètre, hauteur d'eau du pluviomètre, relevé de la semaine.","« Dans un récipient plus large, on mesure plus de pluie. »",6,"sciences-A1b-meteo-capteurs"],
+ ["s","B","Comparer et mesurer des masses","La matière à l'échelle macroscopique","Balance à plateaux, masses marquées, balance électronique et tare. À toi : trouver la masse de la pomme.","« Le plus gros objet est le plus lourd. »",6,"sciences-B1-mesurer-masses"],
+ ["s","B","Mélanges homogènes et hétérogènes","La matière à l'échelle macroscopique","Le sucre se disperse entre les particules d'eau, la masse se conserve ; saturation du sel.","« Le sucre dissous disparaît. »",5,"sciences-B1b-melanges"],
+ ["s","B","Séparer les constituants d'un mélange","La matière à l'échelle macroscopique","Tamiser, décanter, filtrer, évaporer l'eau de mer ; quiz des méthodes.","« Filtrer l'eau salée enlève le sel. »",7,"sciences-B1c-separer-melanges"]];
+const NOM={h:"Histoire",g:"Géographie",s:"Sciences"};
+let f="all", y=null;
+function draw(){
+  const list=document.getElementById("list"); list.innerHTML="";
+  ["h","g","s"].forEach(m=>{ if(f!=="all"&&f!==m) return; const items=A.filter(a=>a[0]===m&&(!y||a[1]===y)); if(!items.length) return;
+    const sec=document.createElement("section"); sec.innerHTML=`<h2>${NOM[m]} <small>${items.length} animation${items.length>1?"s":""}</small></h2>`;
+    const g=document.createElement("div"); g.className="grid";
+    items.forEach(a=>{ const c=document.createElement("article"); c.className="card c-"+a[0];
+      c.innerHTML=`<div class="meta"><span class="m">${NOM[a[0]]}</span><span>Année ${a[1]} · Période 1</span><span>${a[6]} étapes</span></div><h3>${a[2]}</h3><p class="prog">${a[3]}</p><p class="mech">${a[4]}</p><p class="myth"><b>Idée fausse :</b> ${a[5]}</p><a href="animations/${a[7]}.html">Ouvrir l'animation →</a>`; g.appendChild(c); });
+    sec.appendChild(g); list.appendChild(sec); });
+}
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{
+  if(b.dataset.f){ f=b.dataset.f; document.querySelectorAll("[data-f]").forEach(x=>x.setAttribute("aria-pressed",x===b)); }
+  else { y = y===b.dataset.y ? null : b.dataset.y; document.querySelectorAll("[data-y]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.y===y)); }
+  draw(); }));
+draw();
+</script>
+</body></html>

@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Affiche A3 Classe — La Fabrique de l'Exposé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-nuit: #0A192F;
+    --bleu-royal: #1D4ED8;
+    --bleu-electrique: #3B82F6;
+    --bleu-clair: #EFF6FF;
+    --jaune-soleil: #FBBF24;
+    --jaune-vif: #F59E0B;
+    --jaune-pale: #FEF3C7;
+    --vert-emeraude: #10B981;
+    --vert-clair: #ECFDF5;
+    --corail: #EF4444;
+    --orange-chaleur: #F97316;
+    --violet-magie: #8B5CF6;
+    --blanc: #FFFFFF;
+    --gris-fond: #F8FAFC;
+    --texte-sombre: #0F172A;
+    --texte-moyen: #334155;
+    --bordure: #CBD5E1;
+  }
+
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body {
+    margin: 0; padding: 0; background: #334155;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: var(--texte-sombre);
+  }
+
+  /* Barre d'action supérieure */
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #0F172A; color: white; padding: 14px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  }
+  .toolbar h1 { margin: 0; font-size: 16px; font-weight: 800; font-family: 'Bricolage Grotesque', sans-serif; display: flex; align-items: center; gap: 10px; }
+  .btn-print {
+    background: #FBBF24; color: #0F172A; border: none; font-weight: 800; font-size: 14px;
+    padding: 9px 22px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .btn-print:hover { background: #FCD34D; transform: scale(1.03); }
+
+  /* Conteneur pour rendu A3 */
+  .poster-wrap {
+    display: flex; justify-content: center; padding: 30px 0 50px;
+  }
+  .poster-a3 {
+    width: 297mm; height: 420mm; max-height: 420mm;
+    background: var(--blanc);
+    position: relative;
+    padding: 14mm 16mm 12mm 16mm;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.35);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  @media print {
+    .toolbar { display: none !important; }
+    .poster-wrap { padding: 0 !important; }
+    .poster-a3 {
+      width: 297mm !important; height: 420mm !important; max-height: 420mm !important;
+      box-shadow: none !important; margin: 0 !important; border-radius: 0 !important;
+      padding: 12mm 14mm 10mm 14mm !important;
+    }
+    @page { size: A3 portrait; margin: 0; }
+  }
+
+  /* Cadre décoratif moderne d'affiche */
+  .cadre-deco {
+    position: absolute; inset: 6mm;
+    border: 2px dashed #CBD5E1; border-radius: 20px; pointer-events: none;
+  }
+
+  /* En-tête spectaculaire */
+  .hero-header {
+    background: linear-gradient(135deg, #0A192F 0%, #1E3A8A 50%, #2563EB 100%);
+    border-radius: 24px; padding: 22px 28px; color: white;
+    position: relative; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+  }
+  .hero-header::before {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 220px; height: 220px; background: rgba(251, 191, 36, 0.15); border-radius: 50%; filter: blur(20px);
+  }
+  .hero-top-line {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .badge-classe {
+    background: var(--jaune-soleil); color: #0A192F; font-weight: 900;
+    font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 5px 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .devise-classe {
+    font-size: 13px; font-weight: 700; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .hero-main {
+    display: flex; justify-content: space-between; align-items: center; gap: 20px;
+  }
+  .hero-text h1 {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 42px; font-weight: 800;
+    margin: 0; line-height: 1.08; letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-text p {
+    margin: 8px 0 0; font-size: 16px; opacity: 0.92; font-weight: 500; max-width: 650px; line-height: 1.35;
+  }
+  .mascotte-geante {
+    flex-shrink: 0; width: 92px; height: 92px;
+    background: white; border-radius: 50%; padding: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mascotte-geante svg { width: 100%; height: 100%; }
+
+  /* Bandeau Manifeste */
+  .manifeste-bar {
+    background: var(--jaune-pale); border: 2.5px solid #F59E0B; border-radius: 16px;
+    padding: 11px 20px; margin-top: 11px; display: flex; align-items: center; gap: 14px;
+  }
+  .manifeste-ico { font-size: 32px; flex-shrink: 0; }
+  .manifeste-txt p { margin: 0; font-size: 14px; line-height: 1.35; font-weight: 700; color: #78350F; }
+  .manifeste-txt b { color: #0F172A; font-weight: 900; font-size: 15px; }
+
+  /* 4 Grands Piliers d'Or (Grille principale) */
+  .section-titre {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 800;
+    color: var(--bleu-nuit); text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 13px 0 9px; display: flex; align-items: center; gap: 12px;
+  }
+  .section-titre::after { content: ''; flex: 1; height: 3px; background: linear-gradient(90deg, #3B82F6, transparent); border-radius: 2px; }
+
+  .piliers-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px;
+  }
+  .pilier-box {
+    border-radius: 18px; padding: 14px 14px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; border: 2.5px solid;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  }
+  .p-1 { background: #F8FAFD; border-color: #93C5FD; }
+  .p-2 { background: #FAF5FF; border-color: #D8B4FE; }
+  .p-3 { background: #FFFDF5; border-color: #FCD34D; }
+  .p-4 { background: #ECFDF5; border-color: #6EE7B7; }
+
+  .pilier-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .pilier-badge {
+    width: 32px; height: 32px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 16px; color: white;
+  }
+  .p-1 .pilier-badge { background: var(--bleu-royal); }
+  .p-2 .pilier-badge { background: var(--violet-magie); }
+  .p-3 .pilier-badge { background: var(--jaune-vif); }
+  .p-4 .pilier-badge { background: var(--vert-emeraude); }
+
+  .pilier-ico-top { font-size: 26px; }
+
+  .pilier-nom {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 17px; font-weight: 800;
+    line-height: 1.15; margin: 0 0 6px;
+  }
+  .p-1 .pilier-nom { color: var(--bleu-royal); }
+  .p-2 .pilier-nom { color: var(--violet-magie); }
+  .p-3 .pilier-nom { color: #B45309; }
+  .p-4 .pilier-nom { color: #047857; }
+
+  .pilier-slogan {
+    font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px; line-height: 1.3;
+  }
+  .pilier-points {
+    margin: 0; padding: 0; list-style: none; font-size: 12px; line-height: 1.4;
+  }
+  .pilier-points li {
+    position: relative; padding-left: 14px; margin-bottom: 5px; font-weight: 600; color: #1E293B;
+  }
+  .pilier-points li::before {
+    content: '➔'; position: absolute; left: 0; font-size: 10px; opacity: 0.7;
+  }
+
+  /* La Frise Roadmap du Projet */
+  .roadmap-wrap {
+    background: #F1F5F9; border-radius: 20px; padding: 14px 18px; margin-top: 12px;
+    border: 2px solid #E2E8F0;
+  }
+  .roadmap-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+  }
+  .roadmap-header h3 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 16px;
+    font-weight: 800; color: var(--bleu-nuit); display: flex; align-items: center; gap: 8px;
+  }
+  .roadmap-header span {
+    font-size: 12px; font-weight: 700; color: #64748B;
+  }
+  .roadmap-flow {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; position: relative;
+  }
+  .roadmap-step {
+    background: white; border-radius: 14px; padding: 10px 10px; border: 1.5px solid #CBD5E1;
+    position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  .step-head {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  }
+  .step-num-pill {
+    background: #0F172A; color: white; border-radius: 999px;
+    font-size: 11px; font-weight: 800; padding: 1px 7px;
+  }
+  .step-name {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: #0F172A;
+  }
+  .step-body {
+    font-size: 11px; line-height: 1.35; color: #475569; font-weight: 500;
+  }
+
+  /* Double Bandeau Inférieur : La Boîte d'orale & Le Pacte de classe */
+  .bottom-grid {
+    display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 12px; margin-top: 12px;
+  }
+
+  .oral-box {
+    background: linear-gradient(135deg, #0F2A4A 0%, #1A365D 100%);
+    border-radius: 18px; padding: 14px 18px; color: white;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .oral-box-top {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+  }
+  .oral-box-top h3 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 16px;
+    font-weight: 800; color: #FBBF24; display: flex; align-items: center; gap: 8px;
+  }
+  .oral-box-top .chrono-pill {
+    background: rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2);
+  }
+  .oral-posture-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .posture-item {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 8px 8px; text-align: center;
+  }
+  .posture-item .p-ico { font-size: 22px; margin-bottom: 3px; }
+  .posture-item b { display: block; font-size: 12px; font-weight: 800; color: #FFFFFF; margin-bottom: 2px; }
+  .posture-item p { margin: 0; font-size: 10.5px; line-height: 1.25; opacity: 0.85; }
+
+  /* Le Pacte de la Classe spectatrice */
+  .pacte-box {
+    background: #FFFDF7; border: 2.5px solid #F6E05E; border-radius: 18px;
+    padding: 13px 16px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .pacte-top {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+  .pacte-top h3 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 15.5px;
+    font-weight: 800; color: #78350F;
+  }
+  .pacte-list {
+    margin: 0; padding: 0; list-style: none; font-size: 11.5px; line-height: 1.38;
+  }
+  .pacte-list li {
+    position: relative; padding-left: 18px; margin-bottom: 5px; font-weight: 600; color: #334155;
+  }
+  .pacte-list li::before {
+    content: '⭐'; position: absolute; left: 0; font-size: 11px;
+  }
+  .pacte-list b { color: #0F172A; }
+
+  /* Pied d'affiche */
+  .footer-affiche {
+    border-top: 2px solid var(--bordure); padding-top: 8px; margin-top: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #64748B; font-weight: 700;
+  }
+  .footer-affiche .sigle {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: var(--bleu-nuit);
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1><span>🎨</span> Affiche de Classe A3 · La Fabrique de l'Exposé</h1>
+  <button class="btn-print" onclick="window.print()">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+    Imprimer en A3 / Enregistrer en PDF
+  </button>
+</div>
+
+<div class="poster-wrap">
+  <div class="poster-a3">
+
+    <div class="cadre-deco"></div>
+
+    <!-- En-tête héroïque grand format -->
+    <div class="hero-header">
+      <div class="hero-top-line">
+        <span class="badge-classe">École Élémentaire · Cycle 3 · CM1-CM2</span>
+        <span class="devise-classe">Chercher · Comprendre · Expliquer</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-text">
+          <h1>LA FABRIQUE DE L'EXPOSÉ</h1>
+          <p>Du déclic de curiosité jusqu'au Grand Oral : la méthode visuelle pour raconter une histoire passionnante à la classe !</p>
+        </div>
+        <div class="mascotte-geante">
+          <svg viewBox="0 0 46 46" aria-hidden="true">
+            <circle cx="23" cy="25" r="19" fill="#1D4ED8"/>
+            <circle cx="16" cy="21" r="7" fill="#fff"/>
+            <circle cx="30" cy="21" r="7" fill="#fff"/>
+            <circle cx="17" cy="22" r="3.2" fill="#0A192F"/>
+            <circle cx="29" cy="22" r="3.2" fill="#0A192F"/>
+            <path d="M19 31 Q23 35 27 31" stroke="#FBBF24" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M8 10 L15 15 M38 10 L31 15" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Règle d'or de la classe -->
+    <div class="manifeste-bar">
+      <span class="manifeste-ico">💡</span>
+      <div class="manifeste-txt">
+        <p><b>Le serment du bon orateur :</b> <i>« Je ne suis pas un robot qui récite par cœur. Je suis un explorateur qui partage une découverte avec ses camarades ! »</i></p>
+      </div>
+    </div>
+
+    <!-- 4 Commandements d'or -->
+    <div class="section-titre">
+      <span>⚡ Les 4 Piliers d'un Exposé Captivant</span>
+    </div>
+
+    <div class="piliers-grid">
+      <!-- Pilier 1 -->
+      <div class="pilier-box p-1">
+        <div>
+          <div class="pilier-header">
+            <span class="pilier-badge">1</span>
+            <span class="pilier-ico-top">🎯</span>
+          </div>
+          <h2 class="pilier-nom">Mes Questions sont mon Plan</h2>
+          <div class="pilier-slogan">2 ou 3 questions suffisent !</div>
+          <ul class="pilier-points">
+            <li><i>À quoi ça servait ?</i></li>
+            <li><i>Comment ça fonctionne ?</i></li>
+            <li><i>Qu'est-ce qui a changé ?</i></li>
+            <li>Inutile de faire un plan compliqué : réponds à tes questions une par une.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pilier 2 -->
+      <div class="pilier-box p-2">
+        <div>
+          <div class="pilier-header">
+            <span class="pilier-badge">2</span>
+            <span class="pilier-ico-top">🔍</span>
+          </div>
+          <h2 class="pilier-nom">Des Pépites, pas des Pavés</h2>
+          <div class="pilier-slogan">Garde l'essentiel dans ton panier</div>
+          <ul class="pilier-points">
+            <li><b>⭐ Je garde :</b> surligne uniquement la phrase qui répond à la question.</li>
+            <li><b>📷 Schémas animés :</b> touche <kbd>C</kbd> ou bouton photo pour capturer le mécanisme.</li>
+            <li><b>3 couleurs :</b> Jaune (Idée), Vert (Chiffre/Date), Bleu (Mot clé).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pilier 3 -->
+      <div class="pilier-box p-3">
+        <div>
+          <div class="pilier-header">
+            <span class="pilier-badge">3</span>
+            <span class="pilier-ico-top">✍️</span>
+          </div>
+          <h2 class="pilier-nom">Mes Propres Mots</h2>
+          <div class="pilier-slogan">Interdit au copier-coller !</div>
+          <ul class="pilier-points">
+            <li>Le radar orange te prévient si tu recopies mot pour mot.</li>
+            <li>Lis, ferme les yeux et dis la phrase à voix haute comme à un ami.</li>
+            <li>Utilise les amorces : <i>« D'abord... »</i>, <i>« C'est pourquoi... »</i>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pilier 4 -->
+      <div class="pilier-box p-4">
+        <div>
+          <div class="pilier-header">
+            <span class="pilier-badge">4</span>
+            <span class="pilier-ico-top">🎤</span>
+          </div>
+          <h2 class="pilier-nom">Faire Vibrer la Classe</h2>
+          <div class="pilier-slogan">3 à 5 minutes pour convaincre</div>
+          <ul class="pilier-points">
+            <li>Des diapos aérées : <b>3 mots-clés + 1 belle image</b>.</li>
+            <li>Répétition au micro dans le <b>studio audio</b> de l'Atelier.</li>
+            <li>Regard fier, voix claire, posture droite face aux camarades.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Frise Roadmap du Projet en 5 stations -->
+    <div class="roadmap-wrap">
+      <div class="roadmap-header">
+        <h3><span>🗺️</span> Le Parcours de Fabrication étape par étape</h3>
+        <span>Atelier Exposés & Motion Design</span>
+      </div>
+      <div class="roadmap-flow">
+        <div class="roadmap-step">
+          <div class="step-head">
+            <span class="step-num-pill">1</span>
+            <span class="step-name">L'Idée</span>
+          </div>
+          <div class="step-body">Choix du sujet et des 2-3 questions clés qui forment le plan.</div>
+        </div>
+        <div class="roadmap-step">
+          <div class="step-head">
+            <span class="step-num-pill">2</span>
+            <span class="step-name">L'Enquête</span>
+          </div>
+          <div class="step-body">Recherche sur sites sûrs (Lumni, Vikidia) et capture des animations.</div>
+        </div>
+        <div class="roadmap-step">
+          <div class="step-head">
+            <span class="step-num-pill">3</span>
+            <span class="step-name">L'Écriture</span>
+          </div>
+          <div class="step-body">Reformulation personnelle, définitions des mots savants, relecture.</div>
+        </div>
+        <div class="roadmap-step">
+          <div class="step-head">
+            <span class="step-num-pill">4</span>
+            <span class="step-name">Le Studio</span>
+          </div>
+          <div class="step-body">Entraînement au micro 🎙️, chrono en direct et vérification des diapos.</div>
+        </div>
+        <div class="roadmap-step">
+          <div class="step-head">
+            <span class="step-num-pill">5</span>
+            <span class="step-name">Le Grand Oral</span>
+          </div>
+          <div class="step-body">Présentation sur le TNI 🖥️, minuteur actif et coupons d'écoute pour la classe !</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Double bloc bas : Posture de l'orateur & Le Pacte du public -->
+    <div class="bottom-grid">
+      <!-- Les 4 attitudes de l'orateur -->
+      <div class="oral-box">
+        <div class="oral-box-top">
+          <h3><span>🦁</span> La Posture du Grand Orateur au TNI</h3>
+          <span class="chrono-pill">⏱️ 3 à 5 minutes</span>
+        </div>
+        <div class="oral-posture-grid">
+          <div class="posture-item">
+            <div class="p-ico">📢</div>
+            <b>Voix claire</b>
+            <p>Parle pour le fond de la pièce.</p>
+          </div>
+          <div class="posture-item">
+            <div class="p-ico">🐢</div>
+            <b>Respiration</b>
+            <p>Fais des pauses entre les diapos.</p>
+          </div>
+          <div class="posture-item">
+            <div class="p-ico">👀</div>
+            <b>Regard</b>
+            <p>Regarde tes camarades, pas l'écran.</p>
+          </div>
+          <div class="posture-item">
+            <div class="p-ico">🤝</div>
+            <b>Partage</b>
+            <p>Réponds avec le sourire aux questions.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Le Pacte de la Classe spectatrice -->
+      <div class="pacte-box">
+        <div class="pacte-top">
+          <span style="font-size:22px">🤝</span>
+          <h3>Le Pacte du Public Bienveillant</h3>
+        </div>
+        <ul class="pacte-list">
+          <li><b>Silence & Écoute attentive :</b> on encourage son camarade.</li>
+          <li><b>Coupons d'écoute :</b> chaque élève remplit sa fiche d'avis bienveillante.</li>
+          <li><b>Applaudissements chaleureux :</b> pour saluer le travail accompli !</li>
+          <li><b>Questions curieuses :</b> pour en savoir encore plus sur le sujet.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Pied d'affiche officiel -->
+    <div class="footer-affiche">
+      <div class="sigle">ATELIER EXPOSÉS · ANIMATIONS MOTION DESIGN</div>
+      <div>Affichage Pédagogique de Salle de Classe · Format A3 Haute Définition</div>
+      <div>Cycle 3 · Programmes officiels 2026-2027</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

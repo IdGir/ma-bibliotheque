@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Atelier Exposés — Guide pour les Parents (Format A4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bleu-profond: #0F2A4A;
+    --bleu-primaire: #1E4E8C;
+    --bleu-fond: #F0F5FA;
+    --or-doux: #D9822B;
+    --vert-sage: #1E7E55;
+    --vert-fond: #EDF7F2;
+    --texte-principal: #1A202C;
+    --texte-secondaire: #4A5568;
+    --ligne: #E2E8F0;
+    --blanc: #FFFFFF;
+    --bordeaux: #8C2A3E;
+    --bordeaux-fond: #FAF0F2;
+  }
+
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { margin: 0; padding: 0; background: #64748B; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; color: var(--texte-principal); }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #0F172A; color: white; padding: 12px 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+  .toolbar h1 { margin: 0; font-size: 15px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif; display: flex; align-items: center; gap: 8px; }
+  .btn-print {
+    background: #FFD13B; color: #0F172A; border: none; font-weight: 800; font-size: 13.5px;
+    padding: 8px 18px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: transform 0.15s;
+  }
+  .btn-print:hover { transform: scale(1.03); background: #FFE071; }
+
+  .page-wrap { display: flex; justify-content: center; padding: 24px 0 40px; }
+  .page-a4 {
+    width: 210mm; height: 297mm; max-height: 297mm;
+    background: var(--blanc);
+    position: relative;
+    padding: 10mm 12mm 8mm 12mm;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  @media print {
+    .toolbar { display: none !important; }
+    .page-wrap { padding: 0 !important; }
+    .page-a4 {
+      width: 210mm !important; height: 297mm !important; max-height: 297mm !important;
+      box-shadow: none !important; margin: 0 !important; border-radius: 0 !important;
+      padding: 9mm 11mm 7mm 11mm !important;
+    }
+    @page { size: A4 portrait; margin: 0; }
+  }
+
+  /* En-tête institutionnel et élégant */
+  .header {
+    border-bottom: 2.5px solid var(--bleu-primaire);
+    padding-bottom: 8px; margin-bottom: 7px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .header-left .surtitre {
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--bleu-primaire); display: flex; align-items: center; gap: 6px; margin-bottom: 2px;
+  }
+  .header-left h1 {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 23px; font-weight: 800;
+    color: var(--bleu-profond); margin: 0; line-height: 1.15;
+  }
+  .header-left p {
+    margin: 3px 0 0; font-size: 12px; color: var(--texte-secondaire); font-weight: 500;
+  }
+  .header-badge {
+    background: var(--bleu-fond); border: 1.5px solid #BFDBFE; border-radius: 12px;
+    padding: 6px 12px; text-align: right;
+  }
+  .header-badge b { display: block; font-size: 11px; color: var(--bleu-primaire); font-weight: 800; }
+  .header-badge span { font-size: 10px; color: var(--texte-secondaire); }
+
+  /* Grille des 3 piliers éducatifs */
+  .piliers-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-bottom: 7px;
+  }
+  .pilier-card {
+    background: #F8FAFC; border: 1.5px solid var(--ligne); border-radius: 11px; padding: 8px 10px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .pilier-entete {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pilier-entete .ico { font-size: 16px; }
+  .pilier-entete h3 {
+    margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-size: 12.5px;
+    font-weight: 800; color: var(--bleu-profond);
+  }
+  .pilier-card p {
+    margin: 0; font-size: 10.5px; line-height: 1.35; color: var(--texte-secondaire); font-weight: 500;
+  }
+
+  /* Section double colonne : Sécurité & Motion Design */
+  .section-grid {
+    display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 9px; margin-bottom: 7px;
+  }
+  .bloc-info {
+    border-radius: 12px; padding: 9px 12px; border: 1.5px solid;
+  }
+  .bloc-securite {
+    background: var(--vert-fond); border-color: #A3D9C1;
+  }
+  .bloc-motion {
+    background: var(--bleu-fond); border-color: #B9D5F2;
+  }
+
+  .bloc-titre {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13.5px; font-weight: 800;
+    margin: 0 0 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .bloc-securite .bloc-titre { color: var(--vert-sage); }
+  .bloc-motion .bloc-titre { color: var(--bleu-primaire); }
+
+  .liste-points {
+    margin: 0; padding: 0; list-style: none; font-size: 10.5px; line-height: 1.38;
+  }
+  .liste-points li {
+    position: relative; padding-left: 14px; margin-bottom: 5px; color: #2D3748;
+  }
+  .liste-points li::before {
+    content: '•'; position: absolute; left: 0; font-size: 14px; line-height: 1; top: -1px;
+  }
+  .bloc-securite .liste-points li::before { color: var(--vert-sage); }
+  .bloc-motion .liste-points li::before { color: var(--bleu-primaire); }
+  .liste-points b { color: #0F172A; }
+
+  /* Encart spécial : Lutte contre le plagiat et reformulation */
+  .encart-antiplagiat {
+    background: #FFFDF5; border: 1.5px solid #F3DA84; border-radius: 11px;
+    padding: 8px 12px; margin-bottom: 7px; display: flex; gap: 10px; align-items: center;
+  }
+  .antiplagiat-ico { font-size: 26px; flex-shrink: 0; }
+  .antiplagiat-txt h4 {
+    margin: 0 0 2px; font-family: 'Bricolage Grotesque', sans-serif; font-size: 12.5px;
+    font-weight: 800; color: #8C5304;
+  }
+  .antiplagiat-txt p {
+    margin: 0; font-size: 10.5px; line-height: 1.35; color: #4A5568;
+  }
+
+  /* Guide d'accompagnement à la maison : Faire / Ne pas faire */
+  .maison-wrap {
+    border: 1.5px solid var(--ligne); border-radius: 13px; padding: 9px 12px;
+    background: var(--blanc);
+  }
+  .maison-titre {
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13.5px; font-weight: 800;
+    color: var(--bleu-profond); margin: 0 0 6px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .maison-titre span { font-size: 10px; font-weight: 600; color: var(--texte-secondaire); }
+  .dos-donts-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .do-card, .dont-card {
+    border-radius: 9px; padding: 7px 9px; font-size: 10.2px; line-height: 1.35;
+  }
+  .do-card { background: #F0FDF4; border-left: 3.5px solid var(--vert-sage); }
+  .dont-card { background: #FEF2F2; border-left: 3.5px solid #DC2626; }
+  .do-card b { color: #166534; display: block; margin-bottom: 2px; font-size: 11px; }
+  .dont-card b { color: #991B1B; display: block; margin-bottom: 2px; font-size: 11px; }
+  .do-card ul, .dont-card ul { margin: 0; padding-left: 14px; }
+  .do-card li, .dont-card li { margin-bottom: 3px; }
+
+  /* 4 Étapes concrètes du projet élève */
+  .etapes-famille {
+    margin-top: 7px; background: #F8FAFC; border-radius: 11px; padding: 7px 10px;
+    border: 1px solid var(--ligne);
+  }
+  .etapes-famille-titre {
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--texte-secondaire); margin-bottom: 5px;
+  }
+  .etapes-famille-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 9.8px;
+  }
+  .etape-mini {
+    background: white; border: 1px solid #CBD5E1; border-radius: 7px; padding: 5px 6px;
+  }
+  .etape-mini b { display: block; color: var(--bleu-primaire); font-size: 10.5px; margin-bottom: 2px; }
+
+  /* Pied de page */
+  .footer {
+    border-top: 1px solid var(--ligne); padding-top: 5px; margin-top: 5px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 9px; color: #64748B; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h1><span>📖</span> Atelier Exposés · Fiche Parents d'élèves (A4)</h1>
+  <button class="btn-print" onclick="window.print()">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+    Imprimer en A4 / Enregistrer en PDF
+  </button>
+</div>
+
+<div class="page-wrap">
+  <div class="page-a4">
+
+    <!-- En-tête officiel -->
+    <div class="header">
+      <div class="header-left">
+        <div class="surtitre">
+          <span>École élémentaire</span> · <span>Cycle 3 (CM1-CM2)</span> · <span>Pédagogie & Numérique</span>
+        </div>
+        <h1>L'Atelier Exposés & les Animations Didactiques</h1>
+        <p>Un environnement numérique sécurisé et bienveillant pour apprendre à chercher, comprendre et s'exprimer à l'oral.</p>
+      </div>
+      <div class="header-badge">
+        <b>Guide des Familles</b>
+        <span>Année scolaire 2026-2027</span>
+      </div>
+    </div>
+
+    <!-- 3 Enjeux d'apprentissage majeurs -->
+    <div class="piliers-grid">
+      <div class="pilier-card">
+        <div class="pilier-entete">
+          <span class="ico">🎯</span>
+          <h3>Structurer sa pensée</h3>
+        </div>
+        <p>Fini le syndrome de la page blanche. L'enfant part de 2 ou 3 questions simples qui deviennent le fil conducteur logique de son travail.</p>
+      </div>
+      <div class="pilier-card">
+        <div class="pilier-entete">
+          <span class="ico">🔍</span>
+          <h3>Esprit critique & recherche</h3>
+        </div>
+        <p>Apprendre à sélectionner l'information fiable, trier l'essentiel du superflu et citer systématiquement la source de ses documents.</p>
+      </div>
+      <div class="pilier-card">
+        <div class="pilier-entete">
+          <span class="ico">🗣️</span>
+          <h3>Aisance au Grand Oral</h3>
+        </div>
+        <p>Préparer l'entrée au collège : parler debout devant ses pairs avec calme, conviction, sans lire ses notes, appuyé par des diapos claires.</p>
+      </div>
+    </div>
+
+    <!-- Sécurité numérique & Motion Design -->
+    <div class="section-grid">
+      <!-- Bloc Sécurité & Éthique -->
+      <div class="bloc-info bloc-securite">
+        <h2 class="bloc-titre">
+          <span>🛡️</span> Sécurité numérique & Respect de la vie privée
+        </h2>
+        <ul class="liste-points">
+          <li><b>Recherche en « jardin clos » :</b> Les requêtes web passent par l'API officielle Qwant Junior / Staan, strictement filtrée sur des sites institutionnels éducatifs (Lumni, Vikidia, Cité des sciences, Muséum d'histoire naturelle, BnF).</li>
+          <li><b>Zéro publicité & zéro algorithme addictif :</b> Aucun contenu sponsorisé, aucune suggestion de vidéo parasite, aucun cookie tiers.</li>
+          <li><b>100 % conforme RGPD :</b> Les textes et exposés sont enregistrés uniquement sur la machine de l'école (ou clé USB). Aucune donnée d'enfant n'est revendue ni hébergée sur des serveurs inconnus.</li>
+        </ul>
+      </div>
+
+      <!-- Bloc Animations Motion Design -->
+      <div class="bloc-info bloc-motion">
+        <h2 class="bloc-titre">
+          <span>🎞️</span> Des animations pour comprendre les mécanismes
+        </h2>
+        <ul class="liste-points">
+          <li><b>Montrer la cause, pas le résultat :</b> Plutôt que d'apprendre par cœur, l'enfant voit la transmission de chaîne d'un vélo, la poussée des voûtes gothiques ou la dissolution du sucre.</li>
+          <li><b>Déconstruire les idées fausses :</b> Chaque animation contredit visuellement une fausse croyance fréquente chez les enfants de cet âge.</li>
+          <li><b>Manipulation active & capture d'image :</b> L'élève agit directement sur les curseurs et capture le schéma pour son exposé.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Encart spécial anti-copier-coller -->
+    <div class="encart-antiplagiat">
+      <div class="antiplagiat-ico">✍️</div>
+      <div class="antiplagiat-txt">
+        <h4>L'apprentissage de la reformulation personnelle</h4>
+        <p>L'Atelier intègre un détecteur d'emprunt direct : lorsqu'un élève copie mot pour mot une phrase trouvée sur le web, l'outil l'invite bienveillamment à <b>traduire l'idée avec ses propres mots</b>. Des amorces de phrases (<i>« D'abord... », « On constate que... »</i>) l'aident à développer son style personnel.</p>
+      </div>
+    </div>
+
+    <!-- Comment aider à la maison -->
+    <div class="maison-wrap">
+      <div class="maison-titre">
+        <span>🏠 Comment accompagner votre enfant à la maison ?</span>
+        <span>L'encourager sans faire à sa place</span>
+      </div>
+      <div class="dos-donts-grid">
+        <div class="do-card">
+          <b>✅ Ce qui l'aide énormément :</b>
+          <ul>
+            <li>Lui demander : <i>« Explique-moi ce que tu as appris comme si j'avais 7 ans. »</i></li>
+            <li>Chronométrer sa répétition orale (3 à 5 minutes) dans une ambiance détendue.</li>
+            <li>Le féliciter quand il utilise un vocabulaire précis sans lire sa feuille.</li>
+            <li>L'écouter répéter avec le nouveau <b>studio micro</b> de l'Atelier.</li>
+          </ul>
+        </div>
+        <div class="dont-card">
+          <b>❌ Ce qu'il vaut mieux éviter :</b>
+          <ul>
+            <li>Rédiger les textes à sa place (l'enseignant évalue la logique de l'enfant).</li>
+            <li>Ajouter trop d'informations complexes d'adultes : l'exposé doit rester accessible.</li>
+            <li>Surcharger les diapos de texte : elles ne doivent contenir que des mots-clés et images.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Déroulement synthétique du projet -->
+    <div class="etapes-famille">
+      <div class="etapes-famille-titre">Le déroulement de l'activité en classe</div>
+      <div class="etapes-famille-grid">
+        <div class="etape-mini">
+          <b>1. Mon sujet</b>
+          Choix du thème et rédaction des 2 à 3 questions de recherche.
+        </div>
+        <div class="etape-mini">
+          <b>2. Mes pépites</b>
+          Recherche sur sites sûrs, capture d'animation, surlignage couleur.
+        </div>
+        <div class="etape-mini">
+          <b>3. Rédaction</b>
+          Écriture avec ses mots, lexique et génération auto des diapos.
+        </div>
+        <div class="etape-mini">
+          <b>4. Grand Oral</b>
+          Passage au tableau (TNI) et évaluation bienveillante par les camarades.
+        </div>
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+      <div><b>Atelier Exposés · Cycle 3</b> · Outil pédagogique libre et ouvert pour l'école primaire</div>
+      <div>Mise à disposition pour la classe et les familles · 2026-2027</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

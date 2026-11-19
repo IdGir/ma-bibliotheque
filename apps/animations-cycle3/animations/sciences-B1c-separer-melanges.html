@@ -1,0 +1,423 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Séparer les constituants d'un mélange</title><style>:root{
+  --ink:#1E2430; --ink2:#4A5468; --line:#D6DBE4; --paper:#FFFFFF;
+  --bg:#F3F6FC; --accent:#2856A8; --accent-soft:#DCE6F7;
+  --donnee:#2563A8; --transfo:#E07A1F; --resultat:#2E8B57; --alerte:#C0392B;
+}
+body.m-histoire{--bg:#FBF6EE; --accent:#A8431F; --accent-soft:#F3E1D3;}
+body.m-geographie{--bg:#F1F7F5; --accent:#1C6E61; --accent-soft:#D5EAE4;}
+body.m-sciences{--bg:#F3F6FC; --accent:#2856A8; --accent-soft:#DCE6F7;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Trebuchet MS",system-ui,-apple-system,Roboto,Arial,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;width:100vw;background:var(--bg)}
+header{display:flex;align-items:center;gap:14px;padding:8px 16px;border-bottom:3px solid var(--accent);background:var(--paper);min-height:56px}
+header .badge{background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:5px 12px;border-radius:999px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+header h1{font-size:clamp(18px,2.2vw,28px);margin:0;flex:1;line-height:1.15}
+header h1 small{display:block;font-size:.58em;font-weight:500;color:var(--ink2)}
+.hbtn{border:2px solid var(--accent);background:#fff;color:var(--accent);border-radius:10px;min-width:44px;min-height:44px;font-size:20px;cursor:pointer;font-weight:700;padding:0 10px}
+.hbtn:hover{background:var(--accent-soft)}
+.hbtn.off{opacity:.45;text-decoration:line-through}
+#stageWrap{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;padding:6px 10px}
+#stage{width:100%;height:100%;display:block;background:var(--paper);border-radius:14px;box-shadow:0 2px 10px rgba(30,36,48,.12)}
+#stage text{font-family:"Segoe UI","Trebuchet MS",system-ui,Roboto,Arial,sans-serif}
+#overlay{position:absolute;inset:6px 10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(255,255,255,.78);border-radius:14px;cursor:pointer;backdrop-filter:blur(2px)}
+#overlay.hide{display:none}
+#overlay .big{width:120px;height:120px;border-radius:50%;background:var(--accent);color:#fff;font-size:56px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(0,0,0,.25);padding-left:10px}
+#overlay p{font-size:24px;margin:0;font-weight:600;color:var(--ink);text-align:center;padding:0 20px}
+#overlay p.sub{font-size:18px;font-weight:400;color:var(--ink2)}
+#manip{display:none;align-items:center;justify-content:center;gap:16px;padding:6px 16px;background:var(--accent-soft);font-size:20px;font-weight:600;flex-wrap:wrap}
+#manip.on{display:flex}
+#manip input[type=range]{width:min(420px,60vw);height:32px;accent-color:var(--transfo)}
+#manip button{min-height:44px;padding:0 16px;border-radius:10px;border:2px solid var(--transfo);background:#fff;color:var(--ink);font-size:18px;font-weight:700;cursor:pointer}
+#manip button.sel{background:var(--transfo);color:#fff}
+#caption{background:var(--paper);margin:0 10px;border-radius:12px;border-left:8px solid var(--accent);padding:10px 16px;font-size:clamp(18px,1.75vw,26px);line-height:1.35;min-height:3.2em;display:flex;align-items:center;gap:12px}
+#caption .num{flex:none;background:var(--accent);color:#fff;border-radius:8px;font-weight:800;font-size:.8em;padding:3px 9px}
+#bar{display:flex;align-items:center;gap:10px;padding:8px 12px 10px;flex-wrap:wrap;justify-content:center}
+#dots{display:flex;align-items:center;gap:0;flex:1 1 320px;justify-content:center;min-width:260px}
+#dots .dot{width:36px;height:36px;border-radius:50%;border:3px solid var(--accent);background:#fff;color:var(--accent);font-weight:800;font-size:16px;cursor:pointer;flex:none;padding:0}
+#dots .dot.done{background:var(--accent);color:#fff}
+#dots .dot.cur{box-shadow:0 0 0 5px var(--accent-soft);transform:scale(1.12)}
+#dots .seg{height:4px;flex:1 1 10px;max-width:60px;background:var(--line)}
+#dots .seg.done{background:var(--accent)}
+.ctl{display:flex;align-items:center;gap:8px}
+.cbtn{min-width:52px;min-height:48px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;font-weight:700;padding:0 12px}
+.cbtn.play{min-width:76px;font-size:26px;background:var(--transfo)}
+.cbtn:hover{filter:brightness(1.1)}
+.speed{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;color:var(--ink2)}
+.speed input{width:120px;accent-color:var(--accent)}
+.speed b{min-width:44px;color:var(--ink)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pulse{animation:pulse 1.1s ease-in-out infinite}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 0 rgba(224,122,31,0))}50%{filter:drop-shadow(0 0 10px rgba(224,122,31,.95))}}
+.glow{animation:glow 1.2s ease-in-out infinite}
+@media (max-width:700px){header .badge{display:none}.speed input{width:80px}}
+</style></head><body><script>/* Moteur d'animations pédagogiques — étapes, pas-à-pas, vitesse, voix off fr-FR */
+(function(){
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+/* ---------- helpers SVG ---------- */
+function el(tag,attrs,parent){
+  const e=document.createElementNS(NS,tag);
+  if(attrs) for(const k in attrs){ if(k==="text") e.textContent=attrs[k]; else if(attrs[k]!==undefined&&attrs[k]!==null) e.setAttribute(k,attrs[k]); }
+  if(parent) parent.appendChild(e);
+  return e;
+}
+function set(e,attrs){ for(const k in attrs){ if(k==="text") e.textContent=attrs[k]; else e.setAttribute(k,attrs[k]); } return e; }
+
+const H={
+  ease,lerp,clamp,el,set,
+  /* progression locale d'un sous-intervalle [a,b] de t, avec easing */
+  seg(t,a,b,noEase){ const v=clamp((t-a)/(b-a),0,1); return noEase?v:ease(v); },
+  op(e,v){ if(!e) return; e.setAttribute("opacity",clamp(v,0,1)); e.style.display=v<=0.001?"none":""; },
+  show(e){H.op(e,1)}, hide(e){H.op(e,0)},
+  /* tracé progressif d'un chemin */
+  draw(p,t){ if(!p) return; let L=p._len; if(L===undefined){ try{L=p.getTotalLength();}catch(_){L=1000} p._len=L; }
+    p.style.strokeDasharray=L+" "+L; p.style.strokeDashoffset=L*(1-clamp(t,0,1)); p.style.display=t<=0.001?"none":""; },
+  tr(e,x,y,s,r){ e.setAttribute("transform",`translate(${x},${y})`+(s!==undefined&&s!==1?` scale(${s})`:"")+(r?` rotate(${r})`:"")); },
+  /* point le long d'un chemin */
+  along(p,t){ let L=p._len; if(L===undefined){L=p.getTotalLength();p._len=L;} const q=p.getPointAtLength(L*clamp(t,0,1)); return {x:q.x,y:q.y}; },
+  num(e,v,dec,suffix){ e.textContent=(dec?v.toFixed(dec).replace(".",","):Math.round(v).toLocaleString("fr-FR"))+(suffix||""); },
+  cls(e,c,on){ if(e) e.classList.toggle(c,!!on); },
+  /* texte multi-lignes (retour à la ligne approximatif) */
+  wrap(textEl,str,maxChars,lh){
+    while(textEl.firstChild) textEl.removeChild(textEl.firstChild);
+    const x=textEl.getAttribute("x")||0; lh=lh||1.2;
+    const lines=[]; str.split("\n").forEach(par=>{ let cur=""; par.split(" ").forEach(w=>{ if((cur+" "+w).trim().length>maxChars&&cur){lines.push(cur);cur=w;} else cur=(cur?cur+" ":"")+w; }); lines.push(cur); });
+    lines.forEach((l,i)=>{ const ts=el("tspan",{x,dy:i===0?0:lh+"em"},textEl); ts.textContent=l; });
+    return lines.length;
+  },
+  /* étiquette = rectangle arrondi + texte centré */
+  label(parent,x,y,str,o){
+    o=o||{}; const g=el("g",{},parent); const fs=o.size||26;
+    const lines=str.split("\n"); const w=o.w||Math.max(...lines.map(l=>l.length))*fs*0.56+fs*1.1; const h=o.h||lines.length*fs*1.22+fs*0.7;
+    el("rect",{x:x-w/2,y:y-h/2,width:w,height:h,rx:o.rx??12,fill:o.fill||"#fff",stroke:o.stroke||"#1E2430","stroke-width":o.sw??2.5},g);
+    const t=el("text",{x,y:y-(lines.length-1)*fs*0.61+fs*0.35,"text-anchor":"middle","font-size":fs,"font-weight":o.weight||700,fill:o.color||"#1E2430"},g);
+    lines.forEach((l,i)=>{ el("tspan",{x,dy:i?fs*1.22:0,text:l},t); });
+    g._w=w; g._h=h; return g;
+  },
+  /* flèche (ligne ou courbe) avec pointe */
+  arrow(parent,d,o){
+    o=o||{}; const g=el("g",{},parent); const col=o.color||"#E07A1F"; const id="ah"+Math.random().toString(36).slice(2,8);
+    const defs=el("defs",{},g); const m=el("marker",{id,viewBox:"0 0 10 10",refX:7,refY:5,markerWidth:o.head||4,markerHeight:o.head||4,orient:"auto-start-reverse"},defs);
+    el("path",{d:"M0,0 L10,5 L0,10 z",fill:col},m);
+    const p=el("path",{d,fill:"none",stroke:col,"stroke-width":o.w||6,"stroke-linecap":"round","marker-end":`url(#${id})`,"stroke-dasharray":o.dash||null},g);
+    g.path=p; return g;
+  },
+  /* carte "idée fausse / en réalité" */
+  myth(parent,x,y,w,faux,vrai){
+    const g=el("g",{},parent); const fs=24;
+    const t1=el("text",{x:x+70,y:y+44,"font-size":fs,"font-weight":600,fill:"#7A1D12"},null);
+    const t2=el("text",{x:x+70,y:0,"font-size":fs,"font-weight":600,fill:"#14532D"},null);
+    const n1=H.wrap(t1,faux,Math.floor((w-90)/(fs*0.5)));
+    const h1=n1*fs*1.2+40;
+    const r1=el("rect",{x,y,width:w,height:h1,rx:14,fill:"#FDECEA",stroke:"#C0392B","stroke-width":3},g);
+    el("text",{x:x+20,y:y+46,"font-size":34,"font-weight":800,fill:"#C0392B",text:"✗"},g); g.appendChild(t1);
+    const y2=y+h1+14; t2.setAttribute("y",y2+44);
+    const n2=H.wrap(t2,vrai,Math.floor((w-90)/(fs*0.5)));
+    const h2=n2*fs*1.2+40;
+    el("rect",{x,y:y2,width:w,height:h2,rx:14,fill:"#E8F6EE",stroke:"#2E8B57","stroke-width":3},g);
+    el("text",{x:x+18,y:y2+46,"font-size":34,"font-weight":800,fill:"#2E8B57",text:"✓"},g); g.appendChild(t2);
+    g.faux=r1; g._h=h1+14+h2; return g;
+  },
+  /* frise chronologique persistante */
+  frise(parent,o){
+    const g=el("g",{},parent); const {x,y,w,debut,fin}=o; const sc=v=>x+(v-debut)/(fin-debut)*w;
+    el("rect",{x:x-10,y:y-34,width:w+20,height:92,rx:12,fill:"#fff",stroke:"#D6DBE4","stroke-width":2},g);
+    el("line",{x1:x,y1:y,x2:x+w,y2:y,stroke:"#1E2430","stroke-width":4},g);
+    (o.ticks||[]).forEach(v=>{ el("line",{x1:sc(v),y1:y-8,x2:sc(v),y2:y+8,stroke:"#1E2430","stroke-width":2},g); el("text",{x:sc(v),y:y+32,"text-anchor":"middle","font-size":20,fill:"#4A5468",text:v<0?(-v)+" av. J.-C.":String(v)},g); });
+    (o.periodes||[]).forEach(p=>{ const r=el("rect",{x:sc(p.a),y:y-24,width:sc(p.b)-sc(p.a),height:14,rx:5,fill:p.color,opacity:.85},g); el("text",{x:(sc(p.a)+sc(p.b))/2,y:y-30,"text-anchor":"middle","font-size":17,"font-weight":700,fill:p.color,text:p.nom},g); });
+    const evts={}; (o.events||[]).forEach(e=>{ const eg=el("g",{},g); el("circle",{cx:sc(e.d),cy:y,r:9,fill:e.color||"#A8431F",stroke:"#fff","stroke-width":2},eg); el("text",{x:sc(e.d),y:y+(e.up?-40:54),"text-anchor":"middle","font-size":19,"font-weight":700,fill:e.color||"#A8431F",text:e.label},eg); evts[e.id]=eg; });
+    const cur=el("g",{},g); el("path",{d:"M0,-30 L0,14",stroke:"#E07A1F","stroke-width":5},cur); el("path",{d:"M-11,-40 L11,-40 L0,-26 z",fill:"#E07A1F"},cur);
+    const curT=el("text",{x:0,y:-46,"text-anchor":"middle","font-size":22,"font-weight":800,fill:"#E07A1F"},cur);
+    g.events=evts; g.sc=sc;
+    g.at=(v,lbl)=>{ H.tr(cur,sc(v),y); curT.textContent=lbl!==undefined?lbl:Math.round(v); };
+    g.cursor=cur; return g;
+  }
+};
+
+/* ---------- voix off ---------- */
+const Voice={
+  on:true, voice:null, ready:false, cur:null,
+  init(){
+    if(!("speechSynthesis" in window)){ this.on=false; this.ok=false; return; }
+    this.ok=true;
+    const pick=()=>{ const vs=speechSynthesis.getVoices().filter(v=>/^fr/i.test(v.lang)); if(!vs.length) return;
+      const pref=["Denise","Vivienne","Eloise","Henri","Rémy","Remy","Google français","Amélie","Amelie","Thomas","Audrey","Hortense","Julie","Paul"];
+      const fr=vs.filter(v=>/fr[-_]FR/i.test(v.lang)); const pool=fr.length?fr:vs;
+      let best=null; for(const p of pref){ best=pool.find(v=>v.name.includes(p)&&/Natural|Online|Neural/i.test(v.name))||null; if(best) break; }
+      if(!best) for(const p of pref){ best=pool.find(v=>v.name.includes(p))||null; if(best) break; }
+      this.voice=best||pool[0]; this.ready=true; };
+    pick(); speechSynthesis.onvoiceschanged=pick;
+  },
+  speak(text,rate){
+    return new Promise(res=>{
+      if(!this.on||!this.ok||!text){ res(); return; }
+      try{ speechSynthesis.cancel(); }catch(_){}
+      const id=(this.id=(this.id||0)+1);
+      // découpage en phrases (évite la coupure des longues lectures dans Chrome)
+      const parts=(text.replace(/[✗✓→←]/g,"").match(/[^.!?;:]+[.!?;:]*/g)||[text]).map(x=>x.trim()).filter(Boolean);
+      let done=false; const fin=()=>{ if(!done){done=true; clearTimeout(to); res();} };
+      const to=setTimeout(fin,(text.length/11/rate+5)*1000); // garde-fou
+      const next=k=>{ if(id!==this.id||k>=parts.length){ fin(); return; }
+        const u=new SpeechSynthesisUtterance(parts[k]); u.lang="fr-FR"; if(this.voice) u.voice=this.voice; u.rate=rate; u.pitch=1;
+        u.onend=()=>next(k+1); u.onerror=()=>next(k+1); this.cur=u; speechSynthesis.speak(u); };
+      next(0);
+    });
+  },
+  stop(){ this.id=(this.id||0)+1; if(this.ok) try{ speechSynthesis.cancel(); }catch(_){} }
+};
+
+/* ---------- application ---------- */
+window.Anim={ H, run(cfg){
+  document.body.className="m-"+(cfg.matiere||"sciences");
+  document.title=cfg.titre;
+  const [VW,VH]=cfg.viewBox||[1600,900];
+  document.body.innerHTML=`<div id="app">
+   <header><a class="hbtn" href="../index.html" title="Toutes les animations" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none">☰</a><span class="badge">${cfg.badge||cfg.matiere}</span><h1>${cfg.titre}<small>${cfg.sousTitre||""}</small></h1>
+   <button class="hbtn" id="bSnap" title="Capturer le schéma (image PNG) [C]">📷</button><button class="hbtn" id="bVoice" title="Voix off (V)">🔊</button><button class="hbtn" id="bFull" title="Plein écran (F)">⛶</button></header>
+   <div id="stageWrap"><svg id="stage" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet"></svg>
+     <div id="overlay"><div class="big">▶</div><p>${cfg.accroche||"Lance l'animation"}</p><p class="sub">Espace : lecture/pause · ← → : étapes · R : recommencer · F : plein écran · C : photo schéma</p></div></div>
+   <div id="manip"></div>
+   <div id="caption"><span class="num" id="cNum">1</span><span id="cTxt"></span></div>
+   <div id="bar"><div class="ctl"><button class="cbtn" id="bRe" title="Recommencer (R)">⏮</button><button class="cbtn" id="bPrev" title="Étape précédente (←)">◀</button><button class="cbtn play" id="bPlay" title="Lecture / pause (Espace)">▶</button><button class="cbtn" id="bNext" title="Étape suivante (→)">▶|</button></div>
+   <div id="dots"></div>
+   <div class="speed">Vitesse <input type="range" id="sp" min="0" max="6" step="1" value="3"><b id="spv">×1</b></div></div></div>`;
+  const svg=document.getElementById("stage");
+  const $=id=>document.getElementById(id);
+  const steps=cfg.etapes, N=steps.length;
+  const api=Object.assign({svg,W:VW,H:VH,manip:$("manip"),step:()=>S.k,redraw:()=>render()},H);
+  // fond et calques
+  el("rect",{x:0,y:0,width:VW,height:VH,fill:"#fff",rx:14},svg);
+  api.layer=name=>el("g",{id:name},svg);
+
+  // Carillon Web Audio API
+  let audioCtx=null;
+  function playChime(freqs=[523.25, 659.25, 783.99]){
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      if(!audioCtx) audioCtx=new AC();
+      if(audioCtx.state==="suspended") audioCtx.resume();
+      const now=audioCtx.currentTime;
+      freqs.forEach((f,idx)=>{
+        const osc=audioCtx.createOscillator(); const gain=audioCtx.createGain();
+        osc.type="sine"; osc.frequency.setValueAtTime(f, now+idx*0.08);
+        gain.gain.setValueAtTime(0.09, now+idx*0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now+idx*0.08+0.35);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now+idx*0.08); osc.stop(now+idx*0.08+0.4);
+      });
+    }catch(e){}
+  }
+  api.playChime=playChime;
+
+  cfg.init(api);
+
+  const SPEEDS=[.25,.5,.75,1,1.25,1.5,2];
+  const S={k:0,t:0,playing:false,running:false,started:false,speed:1,raf:0,token:0};
+
+  // frise des étapes
+  const dots=$("dots");
+  steps.forEach((s,i)=>{ if(i){ const sg=document.createElement("div"); sg.className="seg"; dots.appendChild(sg);} const b=document.createElement("button"); b.className="dot"; b.textContent=i+1; b.title=s.titre||("Étape "+(i+1)); b.onclick=()=>{ jump(i); }; dots.appendChild(b); });
+
+  function render(){
+    if(cfg.reset) cfg.reset(api);
+    for(let i=0;i<S.k;i++) steps[i].anim(1,api);
+    steps[S.k].anim(S.t,api);
+    if(cfg.after) cfg.after(api,S.k,S.t);
+    // UI
+    $("cNum").textContent=(S.k+1)+"/"+N; $("cTxt").textContent=steps[S.k].legende;
+    [...dots.querySelectorAll(".dot")].forEach((d,i)=>{ d.classList.toggle("done",i<S.k||(i===S.k&&S.t>=1)); d.classList.toggle("cur",i===S.k); });
+    [...dots.querySelectorAll(".seg")].forEach((d,i)=>d.classList.toggle("done",i<S.k));
+    $("bPlay").textContent=S.playing?"⏸":"▶";
+    const m=cfg.manipDes, mj=cfg.manipJusqua??N; $("manip").classList.toggle("on",m!==undefined&&S.k>=m&&S.k<=mj&&(S.k>m||S.t>=.6));
+  }
+  function stopAnim(){ cancelAnimationFrame(S.raf); S.running=false; S.token++; Voice.stop(); }
+  function runStep(){
+    stopAnim(); $("overlay").classList.add("hide"); S.started=true;
+    const tok=S.token; const st=steps[S.k]; const dur=(st.duree||4000);
+    let last=performance.now(); S.running=true;
+    const vp=Voice.speak(st.voix||st.legende, clamp(0.95*Math.sqrt(S.speed),0.6,1.5));
+    const tick=now=>{ if(tok!==S.token) return; const dt=Math.min(now-last,100); last=now; S.t=clamp(S.t+dt*S.speed/dur,0,1); render(); if(S.t<1) S.raf=requestAnimationFrame(tick); else { S.running=false; if(S.k===N-1) playChime(); vp.then(()=>{ if(tok!==S.token) return; if(S.playing){ if(S.k<N-1){ setTimeout(()=>{ if(tok!==S.token||!S.playing) return; S.k++; S.t=0; runStep(); },700/S.speed); } else { S.playing=false; render(); } } }); } };
+    S.raf=requestAnimationFrame(tick);
+  }
+  function play(){ if(S.playing){ S.playing=false; stopAnim(); render(); return; }
+    S.playing=true; if(S.t>=1){ if(S.k<N-1){S.k++;S.t=0;} else {S.k=0;S.t=0;} } runStep(); render(); }
+  function next(){ S.playing=false; if(!S.started||(S.t<1&&!S.running)){ runStep(); return; } if(S.k<N-1){ S.k++; S.t=0; runStep(); } else { stopAnim(); S.t=1; render(); } }
+  function prev(){ S.playing=false; if(S.k>0) S.k--; S.t=0; runStep(); }
+  function jump(i){ S.playing=false; S.k=i; S.t=0; runStep(); }
+  function restart(){ S.playing=false; stopAnim(); S.k=0; S.t=0; S.started=false; $("overlay").classList.remove("hide"); render(); }
+  $("overlay").onclick=()=>{ S.playing=true; runStep(); render(); };
+  $("bPlay").onclick=play; $("bNext").onclick=next; $("bPrev").onclick=prev; $("bRe").onclick=restart;
+  $("sp").oninput=e=>{ S.speed=SPEEDS[+e.target.value]; $("spv").textContent="×"+String(S.speed).replace(".",","); };
+  Voice.init(); if(!Voice.ok) $("bVoice").classList.add("off");
+  $("bVoice").onclick=()=>{ Voice.on=!Voice.on; if(!Voice.on) Voice.stop(); $("bVoice").classList.toggle("off",!Voice.on); $("bVoice").textContent=Voice.on?"🔊":"🔇"; };
+  $("bFull").onclick=()=>{ const a=$("app"); if(!document.fullscreenElement) (a.requestFullscreen||a.webkitRequestFullscreen).call(a).catch?.(()=>{}); else document.exitFullscreen(); };
+
+  // Capture image schéma (PNG)
+  function captureSchema(){
+    try{
+      const serializer = new XMLSerializer();
+      const clone = svg.cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      const svgStr = serializer.serializeToString(clone);
+      const blob = new Blob([svgStr], {type:"image/svg+xml;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const cvs = document.createElement("canvas");
+        cvs.width = VW; cvs.height = VH;
+        const ctx = cvs.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, VW, VH);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        cvs.toBlob(pngBlob => {
+          if(!pngBlob) return;
+          const a = document.createElement("a");
+          const nom = (cfg.titre||"animation").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").slice(0,35);
+          a.download = `${nom}-etape-${S.k+1}.png`;
+          a.href = URL.createObjectURL(pngBlob);
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          playChime([783.99, 1046.5]); // Jingle de photo
+        }, "image/png");
+      };
+      img.src = url;
+    }catch(e){ console.error("Capture impossible", e); }
+  }
+  if($("bSnap")) $("bSnap").onclick=captureSchema;
+
+  // Gestes tactiles (balayage gauche/droite pour tablettes et TNI)
+  let touchStartX=0, touchStartY=0;
+  const sw=$("stageWrap");
+  if(sw){
+    sw.addEventListener("touchstart", e=>{
+      if(!e.touches || !e.touches[0]) return;
+      touchStartX=e.touches[0].clientX; touchStartY=e.touches[0].clientY;
+    }, {passive:true});
+    sw.addEventListener("touchend", e=>{
+      if(!e.changedTouches || !e.changedTouches[0]) return;
+      const dx=e.changedTouches[0].clientX - touchStartX;
+      const dy=e.changedTouches[0].clientY - touchStartY;
+      if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
+        if(dx<0) next(); else prev();
+      }
+    }, {passive:true});
+  }
+
+  document.addEventListener("keydown",e=>{ if(e.target.tagName==="INPUT"&&e.target.type!=="range") return;
+    if(e.code==="Space"){e.preventDefault();play();} else if(e.key==="ArrowRight"){e.preventDefault();next();} else if(e.key==="ArrowLeft"){e.preventDefault();prev();}
+    else if(e.key==="r"||e.key==="R") restart(); else if(e.key==="f"||e.key==="F") $("bFull").click(); else if(e.key==="v"||e.key==="V") $("bVoice").click();
+    else if(e.key==="c"||e.key==="C") captureSchema(); });
+  window.__anim={S,N,render,jump,next,prev,restart,captureSchema,playChime,setT:(k,t)=>{stopAnim();S.k=k;S.t=t;S.started=true;$("overlay").classList.add("hide");render();}};
+  render();
+}};
+})();
+</script><script>(function(){
+let R={}, q=0, rep=null;
+const C={water:"#BFE0F7",muddy:"#C9B48A",sand:"#D9B26A",gravel:"#8C8C8C",salt:"#FFFFFF",ink:"#1E2430",or:"#E07A1F",gr:"#2E8B57",bl:"#2563A8",red:"#C0392B"};
+const rnd=(i,k)=>{ const x=Math.sin(i*12.9898+k*78.233)*43758.5453; return x-Math.floor(x); };
+function beaker(a,p,x,y,w,h){ const g=a.el("g",{},p); g.liq=a.el("rect",{x:x-w/2+4,width:w-8,fill:C.water},g); a.el("path",{d:`M${x-w/2-8},${y-h} L${x-w/2},${y-h+8} L${x-w/2},${y} L${x+w/2},${y} L${x+w/2},${y-h+8} L${x+w/2+8},${y-h}`,fill:"none",stroke:"#7E9BB3","stroke-width":5,"stroke-linejoin":"round"},g); g.x=x; g.y=y; g.w=w; g.h=h; g.set=(lvl,col)=>{ a.set(g.liq,{y:y-lvl,height:Math.max(0,lvl),fill:col||C.water}); }; return g; }
+const QUIZ=[["du sable et des graviers","tamisage"],["de l'eau boueuse","filtration"],["de l'eau salée","évaporation"],["de l'eau et de l'huile","décantation"]];
+Anim.run({
+  titre:"Séparer les constituants d'un mélange",
+  sousTitre:"Sciences et technologie · CM1-CM2 · La matière",
+  matiere:"sciences", badge:"Sciences",
+  accroche:"Comment récupérer le gravier, le sable, l'eau et le sel d'un même mélange ?",
+  manipDes:5, manipJusqua:5,
+  init(a){
+    const {el}=a;
+    R.title=el("text",{x:800,y:70,"text-anchor":"middle","font-size":32,"font-weight":800,fill:C.ink},a.svg);
+    // station 1 : mélange
+    const s1=a.layer("s1"); R.s1=s1; R.b0=beaker(a,s1,400,720,240,320);
+    R.grav=[...Array(14)].map((_,i)=>el("ellipse",{rx:16,ry:12,fill:C.gravel,stroke:"#555","stroke-width":2},s1));
+    R.sandP=[...Array(80)].map(()=>el("circle",{r:5,fill:C.sand},s1));
+    R.ing=el("g",{},s1); [["◆ graviers",C.gravel],["⏳ sable",C.sand],["💧 eau",C.bl],["🧂 sel dissous (invisible !)",C.ink]].forEach(([t,c],i)=>{ el("text",{x:760,y:330+i*70,"font-size":32,"font-weight":800,fill:c==C.sand?"#9C7A3A":c,text:t},R.ing); });
+    // station 2 : tamis
+    const s2=a.layer("s2"); R.s2=s2; R.bT=beaker(a,s2,800,760,260,260);
+    R.tamis=el("g",{},s2); el("path",{d:"M640,470 Q800,600 960,470",fill:"#E6E9EF",stroke:"#5A6475","stroke-width":5},R.tamis); for(let i=0;i<9;i++) el("line",{x1:660+i*35,y1:480,x2:660+i*35,y2:540-Math.abs(i-4)*10,stroke:"#9AA3B2","stroke-width":2},R.tamis); el("line",{x1:960,y1:470,x2:1060,y2:440,stroke:"#5A6475","stroke-width":10},R.tamis);
+    R.bSrc=beaker(a,s2,420,420,180,200); R.stream=el("path",{fill:C.muddy,opacity:.9},s2);
+    R.gravT=[...Array(14)].map(()=>el("ellipse",{rx:16,ry:12,fill:C.gravel,stroke:"#555","stroke-width":2},s2));
+    R.lab2=el("g",{},s2); a.label(R.lab2,1250,520,"Le tamis retient les graviers :\nils sont plus gros que les trous",{size:24,stroke:C.or,color:"#8A4A0E"});
+    // station 3 : décantation
+    const s3=a.layer("s3"); R.s3=s3; R.bD=beaker(a,s3,520,760,260,300); R.bD2=beaker(a,s3,1100,760,220,260);
+    R.sandD=[...Array(80)].map(()=>el("circle",{r:5,fill:C.sand},s3)); R.clock=el("text",{x:520,y:390,"text-anchor":"middle","font-size":36,"font-weight":800,fill:C.bl},s3);
+    R.pour=el("path",{fill:C.water,opacity:.9},s3);
+    R.lab3=el("g",{},s3); a.label(R.lab3,800,180,"Décantation : on attend, le sable (plus lourd) tombe au fond,\npuis on verse doucement le liquide dans un autre récipient",{size:24,stroke:C.or,color:"#8A4A0E"});
+    // station 4 : filtration
+    const s4=a.layer("s4"); R.s4=s4; R.bF=beaker(a,s4,420,780,200,230);
+    el("path",{d:"M300,300 L540,300 L440,440 L440,520 L400,520 L400,440 Z",fill:"#F4F6F9",stroke:"#7E9BB3","stroke-width":5},s4); el("path",{d:"M320,306 L520,306 L420,430 Z",fill:"#FFFDF2",stroke:"#C9B48A","stroke-width":3},s4);
+    R.dirt=el("path",{d:"M380,400 L460,400 L420,430Z",fill:"#A88E5E"},s4); R.drip=[...Array(6)].map(()=>el("circle",{r:6,fill:C.water},s4));
+    const zx=1080, zy=420; R.zoomF=el("g",{},s4); const cpz=el("clipPath",{id:"zf"},el("defs",{},s4)); el("circle",{cx:zx,cy:zy,r:256},cpz); el("circle",{cx:zx,cy:zy,r:260,fill:"#F7FAFD",stroke:"#7E9BB3","stroke-width":5},R.zoomF);
+    el("text",{x:zx,y:zy-280,"text-anchor":"middle","font-size":24,"font-weight":800,fill:C.ink,text:"Zoom sur le papier filtre"},R.zoomF); const zin=el("g",{"clip-path":"url(#zf)"},R.zoomF);
+    R.fil=el("g",{},zin); for(let i=0;i<9;i++){ el("rect",{x:zx-270+i*62,y:zy-12,width:44,height:24,fill:"#C9B48A"},R.fil); }
+    R.zp=[...Array(30)].map((_,i)=>{ const kind=i<10?"terre":i<20?"eau":"sel"; const c=el("circle",{r:kind==="terre"?22:kind==="eau"?10:8,fill:kind==="terre"?"#A88E5E":kind==="eau"?"#7FB8E6":"#fff",stroke:kind==="sel"?C.or:"none","stroke-width":3},zin); c.k=kind; c.i=i; return c; });
+    R.zl=el("g",{},R.zoomF); [["#A88E5E","terre : trop grosse, elle reste"],["#7FB8E6","eau : passe"],["#fff","sel : passe aussi !"]].forEach(([c,t],i)=>{ el("circle",{cx:zx-220,cy:zy+300+i*34,r:10,fill:c,stroke:c==="#fff"?C.or:"none","stroke-width":3},R.zl); el("text",{x:zx-200,y:zy+308+i*34,"font-size":22,fill:C.ink,text:t},R.zl); });
+    R.lab4=el("g",{},s4); a.label(R.lab4,420,200,"L'eau est limpide… mais encore salée !",{size:24,stroke:C.red,color:C.red});
+    // station 5 : évaporation
+    const s5=a.layer("s5"); R.s5=s5; R.bE=beaker(a,s5,520,700,300,160);
+    R.flame=el("g",{},s5); el("rect",{x:440,y:760,width:160,height:24,rx:6,fill:"#5A6475"},R.flame); R.fl=[...Array(5)].map((_,i)=>el("path",{d:`M${460+i*30},760 q-12,-30 0,-55 q12,25 0,55Z`,fill:i%2?"#F2A53B":"#E8622C"},R.flame));
+    R.vap=[...Array(16)].map(()=>el("circle",{r:10,fill:"#7FB8E6",opacity:.6},s5)); R.cris=[...Array(30)].map(()=>el("rect",{width:12,height:12,fill:"#fff",stroke:"#9AA3B2","stroke-width":1.5},s5));
+    R.lab5=el("g",{},s5); a.label(R.lab5,1150,380,"L'eau s'évapore\n(elle part en vapeur),\nle sel reste au fond :\nc'est le principe\ndes marais salants",{size:26,stroke:C.or,color:"#8A4A0E",w:420});
+    // quiz
+    const qz=a.layer("qz"); R.qz=qz; R.qT=el("text",{x:800,y:200,"text-anchor":"middle","font-size":40,"font-weight":800,fill:C.ink},qz); R.qR=el("text",{x:800,y:420,"text-anchor":"middle","font-size":34,"font-weight":800},qz);
+    R.qI=el("text",{x:800,y:330,"text-anchor":"middle","font-size":110},qz); R.qS=el("text",{x:800,y:520,"text-anchor":"middle","font-size":24,fill:"#4A5468"},qz);
+    // synthèse
+    const sy=a.layer("syn"); R.syn=sy; el("rect",{x:0,y:0,width:1600,height:900,fill:"#fff"},sy);
+    R.s4c=[["🥅","Tamiser","solides de tailles\ndifférentes"],["⏳","Décanter","un solide lourd\ntombe au fond"],["☕","Filtrer","retient les solides\nnon dissous"],["☀","Évaporer","récupère un solide\ndissous (le sel)"]].map((f,i)=>{ const g=el("g",{},sy); const x=215+i*390; el("rect",{x:x-180,y:110,width:360,height:280,rx:18,fill:"#F3F6FC",stroke:C.bl,"stroke-width":3},g); el("text",{x,y:200,"text-anchor":"middle","font-size":60,text:f[0]},g); el("text",{x,y:262,"text-anchor":"middle","font-size":30,"font-weight":800,fill:C.bl,text:f[1]},g); const tt=el("text",{x,y:305,"text-anchor":"middle","font-size":22,fill:C.ink},g); f[2].split("\n").forEach((l,j)=>el("tspan",{x,dy:j?28:0,text:l},tt)); if(i<3) a.arrow(g,`M${x+182},250 L${x+206},250`,{color:"#9AA3B2",w:5,head:3}); return g; });
+    R.myth=a.layer("myth"); a.myth(R.myth,200,450,1200,"En filtrant de l'eau salée, on enlève le sel.","Le sel dissous passe à travers le filtre avec l'eau. Pour le récupérer, il faut évaporer l'eau.");
+    const btns=["tamisage","décantation","filtration","évaporation"].map(m=>`<button data-m="${m}">${m}</button>`).join("");
+    a.manip.innerHTML=`Quelle méthode ? ${btns} <button data-m="next">question suivante ▶</button>`;
+    a.manip.querySelectorAll("button").forEach(b=>b.onclick=()=>{ const m=b.dataset.m; if(m==="next"){ q=(q+1)%QUIZ.length; rep=null; } else rep=m; a.redraw(); });
+  },
+  reset(a){ [R.s1,R.s2,R.s3,R.s4,R.s5,R.qz,R.syn,R.myth,R.ing,R.lab2,R.lab3,R.lab4,R.lab5,R.zoomF,R.stream,R.pour,R.bD2,...R.cris,...R.vap].forEach(e=>a.op(e,0)); R.title.textContent=""; },
+  etapes:[
+  { titre:"Un mélange compliqué", duree:8000,
+    legende:"Voici de l'eau de mer ramassée sur la plage, avec du sable et des graviers. Elle contient aussi du sel… dissous, donc invisible. Comment séparer tous ces constituants ?",
+    voix:"Voici de l'eau de mer ramassée sur la plage, avec du sable et des graviers. C'est un mélange hétérogène : on voit les graviers et le sable. Mais il contient aussi du sel, dissous dans l'eau, donc invisible. Comment récupérer séparément le gravier, le sable, l'eau et le sel ?",
+    anim(t,a){ const s=a.seg; a.op(R.s1,1); R.title.textContent="Le mélange de départ"; R.b0.set(260*s(t,0,.3),C.muddy);
+      R.grav.forEach((g,i)=>{ a.op(g,s(t,.2,.3)); a.set(g,{cx:R.b0.x-95+rnd(i,1)*190,cy:700-rnd(i,2)*25}); }); R.sandP.forEach((g,i)=>{ a.op(g,s(t,.25,.35)); a.set(g,{cx:R.b0.x-110+rnd(i,3)*220,cy:470+rnd(i,4)*210}); }); a.op(R.ing,s(t,.4,.6)); } },
+  { titre:"1. Tamiser", duree:10000,
+    legende:"On verse le mélange dans un tamis. Les graviers, plus gros que les trous, restent dedans. L'eau, le sable et le sel passent.",
+    voix:"Première étape : le tamisage. On verse le mélange dans un tamis. Les graviers sont plus gros que les trous : ils restent dans le tamis. L'eau, le sable et le sel, eux, passent à travers.",
+    anim(t,a){ const s=a.seg; a.op(R.s1,1-s(t,0,.1)); a.op(R.s2,s(t,0,.1)); R.title.textContent="1. Le tamisage"; const p=s(t,.15,.75);
+      R.bSrc.set(160*(1-p),C.muddy); R.bSrc.setAttribute("transform",`rotate(${40*s(t,.1,.2)},510,420)`); a.op(R.stream,p>0&&p<1?1:0); a.set(R.stream,{d:"M520,260 Q620,280 700,500 L740,500 Q650,280 530,250Z"}); R.bT.set(200*p,C.muddy);
+      R.gravT.forEach((g,i)=>{ const v=a.clamp(p*1.6-rnd(i,5)*.6,0,1); a.op(g,p>0?1:0); a.set(g,{cx:a.lerp(560,700+rnd(i,6)*200,v),cy:a.lerp(300,520-rnd(i,7)*20-Math.abs(rnd(i,6)-.5)*30,v)}); }); a.op(R.lab2,s(t,.75,.85)); } },
+  { titre:"2. Décanter", duree:11000,
+    legende:"On laisse reposer : le sable, plus lourd que l'eau, tombe au fond. C'est la décantation. Puis on verse doucement le liquide dans un autre récipient.",
+    voix:"Deuxième étape : la décantation. On laisse reposer le mélange. Le sable, plus lourd que l'eau, tombe peu à peu au fond. Ensuite, on verse doucement le liquide dans un autre récipient, sans faire passer le sable : c'est le transvasement.",
+    anim(t,a){ const s=a.seg; a.op(R.s2,1-s(t,0,.1)); a.op(R.s3,s(t,0,.1)); R.title.textContent="2. La décantation"; const d=s(t,.1,.55);
+      R.bD.set(220-150*s(t,.6,.9),d<1?C.muddy:"#DCE9EF"); R.bD.liq.setAttribute("fill",d<.5?C.muddy:"#D9E6EA");
+      R.sandD.forEach((g,i)=>{ const y0=540+rnd(i,4)*210; const yend=752-Math.floor(i/26)*8-rnd(i,5)*6; a.set(g,{cx:R.bD.x-120+rnd(i,3)*240,cy:a.lerp(y0,yend,a.clamp(d*1.3-rnd(i,6)*.3,0,1))}); });
+      R.clock.textContent=t<.58?`⏱ ${Math.round(30*d)} min`:""; a.op(R.bD2,s(t,.55,.6)); const p=s(t,.6,.9); R.bD2.set(140*p,"#D9E6EA"); R.bD.setAttribute("transform",`rotate(${25*s(t,.58,.65)*(1-s(t,.92,1))},650,460)`); a.op(R.pour,p>0&&p<1?1:0); a.set(R.pour,{d:"M670,470 Q900,430 1000,560 L1012,560 Q910,420 680,455Z"}); a.op(R.lab3,s(t,.9,1)); } },
+  { titre:"3. Filtrer", duree:12000,
+    legende:"On filtre le liquide encore trouble : le papier filtre retient les particules de terre, trop grosses. L'eau qui coule est limpide… mais le sel, dissous, est passé avec elle !",
+    voix:"Troisième étape : la filtration. Le liquide est encore un peu trouble. On le verse dans un entonnoir garni de papier filtre. Les petites particules de terre, trop grosses pour les trous du filtre, sont retenues. L'eau qui coule en dessous est limpide. Mais attention : les particules de sel, toutes petites, sont passées avec l'eau. L'eau filtrée est encore salée !",
+    anim(t,a){ const s=a.seg; a.op(R.s3,1-s(t,0,.1)); a.op(R.s4,s(t,0,.1)); R.title.textContent="3. La filtration"; const p=s(t,.1,.85); R.bF.set(120*p,"#E3F1FB"); a.op(R.dirt,s(t,.1,.4));
+      R.drip.forEach((d,i)=>{ const ph=((t*12)+i/6)%1; a.op(d,p>0&&p<1?1:0); a.set(d,{cx:420,cy:530+ph*(780-120*p-540)}); });
+      a.op(R.zoomF,s(t,.15,.25)); R.zp.forEach(c=>{ const x0=860+rnd(c.i,1)*400, v=a.clamp(p*1.4-rnd(c.i,2)*.4,0,1); let y=a.lerp(200+rnd(c.i,3)*180,c.k==="terre"?420:520+rnd(c.i,4)*110,a.ease(v)); const x=c.k==="terre"?x0:860+((c.i%9)*62)+31+20-rnd(c.i,5)*10; a.set(c,{cx:c.k==="terre"?x0:a.lerp(x0,x,s(v,.3,.6)),cy:y}); });
+      a.op(R.lab4,s(t,.85,.95)); } },
+  { titre:"4. Évaporer", duree:11000,
+    legende:"Pour récupérer le sel, on chauffe l'eau salée (ou on la laisse au soleil). L'eau s'évapore, le sel reste : on voit apparaître des cristaux.",
+    voix:"Dernière étape : l'évaporation. On chauffe doucement l'eau salée, ou on la laisse au soleil. L'eau s'évapore : elle part dans l'air sous forme de vapeur. Le sel, lui, ne s'évapore pas : il reste au fond, et des cristaux blancs apparaissent. C'est ce qui se passe dans les marais salants.",
+    anim(t,a){ const s=a.seg; a.op(R.s4,1-s(t,0,.1)); a.op(R.s5,s(t,0,.1)); R.title.textContent="4. L'évaporation"; const e=s(t,.15,.85); R.bE.set(130*(1-e),"#E3F1FB"); R.fl.forEach((f,i)=>f.setAttribute("transform",`translate(0,${Math.sin(t*80+i)*3})`));
+      R.vap.forEach((v,i)=>{ const ph=((t*6)+rnd(i,1))%1; a.op(v,e>0&&e<1?(1-ph)*.7:0); a.set(v,{cx:400+rnd(i,2)*240+Math.sin(ph*6+i)*10,cy:690-130*(1-e)-ph*300}); });
+      R.cris.forEach((c,i)=>{ a.op(c,i<Math.floor(30*s(t,.4,.9))?1:0); a.set(c,{x:385+rnd(i,3)*260,y:684-rnd(i,4)*12,transform:`rotate(${rnd(i,5)*40} ${385+rnd(i,3)*260} ${684})`}); }); a.op(R.lab5,s(t,.8,.9)); } },
+  { titre:"À toi : quelle méthode ?", duree:4000,
+    legende:"Pour chaque mélange, choisis la bonne méthode de séparation avec les boutons, puis passe à la question suivante.",
+    voix:"À toi ! Pour chaque mélange, choisis la bonne méthode de séparation avec les boutons. Puis passe à la question suivante.",
+    anim(t,a){ const s=a.seg; a.op(R.s5,1-s(t,0,.1)); a.op(R.qz,s(t,0,.15)); R.title.textContent="Quiz"; const Q=QUIZ[q]; R.qT.textContent=`Comment séparer ${Q[0]} ?`; R.qI.textContent=["🏖","🟤","🧂","🛢"][q];
+      R.qR.textContent=rep?(rep===Q[1]?`✓ Oui : la ${Q[1]} !`:`✗ Non, essaie encore`):""; a.set(R.qR,{fill:rep===Q[1]?C.gr:C.red}); R.qS.textContent=`Question ${q+1} / ${QUIZ.length}`; } },
+  { titre:"Synthèse", duree:9000,
+    legende:"Tamiser, décanter, filtrer, évaporer : chaque méthode sépare certains constituants. Un solide dissous ne peut être récupéré que par évaporation.",
+    voix:"Récapitulons. Le tamisage sépare des solides de tailles différentes. La décantation laisse tomber au fond un solide plus lourd. La filtration retient les solides qui ne sont pas dissous. Et l'évaporation permet de récupérer un solide dissous, comme le sel.",
+    anim(t,a){ const s=a.seg; a.op(R.qz,1-s(t,0,.1)); R.title.textContent=""; a.op(R.syn,s(t,0,.1)); R.s4c.forEach((f,i)=>{ const v=s(t,.1+i*.12,.22+i*.12); a.op(f,v); a.tr(f,0,(1-v)*40); }); a.op(R.myth,s(t,.65,.8)); a.cls(R.myth.faux,"pulse",t>.8&&t<1); } },
+  ]
+});
+})();
+</script></body></html>
